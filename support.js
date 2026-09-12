@@ -257,6 +257,32 @@
     if (pending) pending();
   };
 
+  // ------------------------------------------------------------------ rutas
+
+  // Las siete pantallas viven en un solo archivo y se cambian con setState, que
+  // no es una navegacion: sin esto la barra de direcciones nunca se movia. El
+  // hash no viaja al servidor, asi que funciona igual en file:// y en Pages.
+
+  // Pestanas validas, tomadas del enum de `data-props`. Hacen falta para saber
+  // que en `#generador/chats` el rol es el segmento que NO es una pestana.
+  var TABS = [];
+
+  function parseHash() {
+    var parts = (location.hash || "").replace(/^#\/?/, "").split("/").filter(Boolean);
+    var tab = null;
+    var role = null;
+    parts.forEach(function (part) {
+      if (TABS.indexOf(part) !== -1) tab = part;
+      else role = part;
+    });
+    // Sin pestana valida el hash no dice nada: mejor ignorarlo que inventar.
+    return tab ? { tab: tab, role: role } : null;
+  }
+
+  function formatHash(tab, role) {
+    return "#" + (role ? role + "/" : "") + tab;
+  }
+
   // ---------------------------------------------------------------- arranque
 
   function defaultProps(scriptEl) {
@@ -268,6 +294,7 @@
         for (var key in spec) {
           if (spec[key] && "default" in spec[key]) props[key] = spec[key]["default"];
         }
+        if (spec.defaultTab && spec.defaultTab.options) TABS = spec.defaultTab.options.slice();
       } catch (e) {
         console.warn("[dc] data-props ilegible:", e);
       }
@@ -314,6 +341,36 @@
 
     var instance = new Component(defaultProps(script));
     var queued = false;
+    var painted = false;
+    var selfWrite = null;
+
+    // El hash manda sobre `?defaultTab=`: es lo que queda al compartir el link.
+    var initial = parseHash();
+    if (initial && instance.state) {
+      instance.state.tab = initial.tab;
+      instance.state.role = initial.role;
+    }
+
+    // Escribe la pestana visible en la URL. En el primer pintado se reemplaza
+    // la entrada en vez de apilar una, para que "atras" salga del sitio y no
+    // se quede rebotando contra la URL sin hash con la que se entro.
+    function syncHash(replace) {
+      if (!TABS.length || !instance.state) return;
+      var tab = instance.state.tab || instance.props.defaultTab;
+      if (TABS.indexOf(tab) === -1) return;
+      var next = formatHash(tab, instance.state.role || null);
+      if (location.hash === next) return;
+      if (replace) {
+        try {
+          history.replaceState(null, "", next);
+          return;
+        } catch (e) {
+          // file:// no permite replaceState (origen "null"): se apila y ya.
+        }
+      }
+      selfWrite = next;
+      location.hash = next;
+    }
 
     function draw() {
       var snapshot = captureFocus(mount);
@@ -327,6 +384,8 @@
       mount.innerHTML = "";
       while (next.firstChild) mount.appendChild(next.firstChild);
       restoreFocus(mount, snapshot);
+      syncHash(!painted);
+      painted = true;
     }
 
     // Agrupa varios setState del mismo clic en un solo repintado.
@@ -340,6 +399,17 @@
     };
 
     draw();
+
+    // Atras/adelante. Se ignora el evento que dispara nuestra propia escritura.
+    window.addEventListener("hashchange", function () {
+      var mine = selfWrite !== null && location.hash === selfWrite;
+      selfWrite = null;
+      if (mine) return;
+      var route = parseHash();
+      // Volver a la entrada sin hash: se repone sin apilar otra.
+      if (!route) return syncHash(true);
+      instance.setState({ tab: route.tab, role: route.role || null });
+    });
   }
 
   if (document.readyState === "loading") {

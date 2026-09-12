@@ -48,12 +48,30 @@ cerrarlos porque tampoco había JS que atendiera la × ni Cancelar.
 repinta el árbol entero y devuelve el foco y el cursor al campo donde estabas
 escribiendo.
 
-Para fijar una pantalla al abrir —útil para mostrar una sola— se pasa por la
-barra de direcciones:
+### Cada pantalla tiene su URL
+
+Las siete pantallas viven en un solo archivo y se cambian con `setState`, que no
+es una navegación. Para que aun así se puedan citar una por una, `support.js`
+sincroniza la pestaña visible con el **hash** de la URL:
 
 ```
-index.html?defaultTab=publicar
+index.html#publicar
 ```
+
+La dirección se actualiza sola al cambiar de pestaña, **atrás** y **adelante**
+del navegador funcionan, y recargar mantiene la pantalla. El hash no viaja al
+servidor, así que esto funciona igual con doble clic (`file://`) que publicado
+en GitHub Pages, sin necesidad de un archivo HTML por pantalla.
+
+Chats, Perfil y Soporte existen en los dos roles. Cuando el rol se fijó a mano
+con el botón **MODO**, va delante:
+
+```
+index.html#generador/chats
+```
+
+`?defaultTab=publicar` sigue funcionando al entrar; en cuanto carga, se
+convierte en `#publicar`.
 
 > **En el canvas de Claude Design** la maqueta sigue funcionando como siempre;
 > el canvas trae su propio runtime y `support.js` se hace a un lado si detecta
