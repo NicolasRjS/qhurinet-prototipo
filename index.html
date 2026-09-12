@@ -989,7 +989,10 @@ class Component extends DCLogic {
       icon: { __html: ICONS[k] },
       bg: active === k ? "#26402f" : "transparent",
       color: active === k ? "#a3d24a" : "#8fa392",
-      go: () => this.setState({ tab: k })
+      // Chats, Perfil y Soporte existen en los dos roles y TAB_ROLE no los
+      // cubre: sin fijar el rol al entrar, role() caía a "reciclador" y un
+      // generador que pulsaba CHATS se encontraba con la otra navegación.
+      go: () => this.setState({ tab: k, role: TAB_ROLE[k] ? null : this.role() })
     }));
 
     // El anuncio destacado es el primero que todavía se puede reclamar.
@@ -1092,7 +1095,9 @@ class Component extends DCLogic {
       pageMeta: HEADERS[active][1],
       statusLabel: isGen ? "3 ANUNCIOS ACTIVOS" : "2 RECOJOS ACTIVOS",
       roleShort: isGen ? "GEN" : "REC",
-      toggleRole: () => this.setState({ role: isGen ? "reciclador" : "generador", tab: isGen ? "mapa" : "publicar" }),
+      // El tab de destino ya implica el rol vía TAB_ROLE; dejarlo derivado
+      // mantiene la URL en #mapa en vez de #reciclador/mapa.
+      toggleRole: () => this.setState({ role: null, tab: isGen ? "mapa" : "publicar" }),
 
       isMapa: active === "mapa",
       isRecojos: active === "recojos",
