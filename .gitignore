@@ -1,0 +1,31 @@
+# Dependencias
+node_modules/
+
+# Artefactos de build
+dist/
+build/
+.cache/
+
+# Entorno
+.env
+.env.*
+!.env.example
+
+# Sistema operativo
+Thumbs.db
+ehthumbs.db
+desktop.ini
+.DS_Store
+
+# Editores
+.idea/
+*.swp
+*~
+
+# Logs
+*.log
+npm-debug.log*
+
+# GitHub Pages / build local de Jekyll (el sitio se sirve tal cual, sin Jekyll)
+_site/
+.jekyll-cache/

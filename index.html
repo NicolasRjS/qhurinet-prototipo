@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QhuriNet · Consola</title>
+<meta name="description" content="Consola de QhuriNet: mapa de materiales, rutas de recojo, chats, confirmación por QR para recicladores y generadores.">
+<link rel="icon" type="image/svg+xml" href="public/images/logo/favicon.svg">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"></link>
+<style>
+  html, body { margin: 0; padding: 0; background: #f4f5f0; }
+  * { box-sizing: border-box; }
+  a { color: #4c7a2f; text-decoration: none; }
+  a:hover { color: #16281f; }
+  input, textarea, select { font-family: inherit; }
+  input::placeholder, textarea::placeholder { color: #8b9186; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: #cdd2c4; border-radius: 4px; }
+</style>
+</helmet>
+<div style="font-family: 'IBM Plex Sans', Helvetica, sans-serif; color: #16281f; background: #f4f5f0; min-height: 100vh; display: flex; min-width: 1240px;">
+
+  <div style="width: 88px; flex: none; background: #16281f; display: flex; flex-direction: column; align-items: center; padding: 20px 0 18px; gap: 22px; position: sticky; top: 0; height: 100vh;">
+    <svg viewBox="0 0 64 64" style="width: 40px; height: 40px; flex: none;" role="img" aria-label="QhuriNet">
+      <title>QhuriNet</title>
+      <rect width="64" height="64" rx="14" fill="#a3d24a"></rect>
+      <g fill="none" stroke="#16281f" stroke-width="5" stroke-linecap="round">
+        <path d="M34.43 43.79 A14 14 0 1 1 45.79 32.43"></path>
+        <path d="M36.5 36.5 L47 47"></path>
+      </g>
+      <circle cx="32" cy="16" r="3.2" fill="#16281f"></circle>
+    </svg>
+
+    <div style="display: flex; flex-direction: column; gap: 5px; width: 100%; align-items: center;">
+      <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="6">
+        <div onClick="{{ n.go }}" style="width: 64px; padding: 9px 0; border-radius: 10px; display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; background: {{ n.bg }};" style-hover="background: #1f3527;">
+          <div style="width: 20px; height: 20px; color: {{ n.color }};" dangerouslySetInnerHTML="{{ n.icon }}"></div>
+          <div style="font-size: 8.5px; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.04em; color: {{ n.color }};">{{ n.label }}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="flex: 1;"></div>
+
+    <div onClick="{{ toggleRole }}" style="width: 64px; padding: 8px 0; border-radius: 10px; border: 1px solid #2f4a38; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer;" style-hover="background: #1f3527;">
+      <div style="font-size: 8px; font-family: 'IBM Plex Mono', monospace; color: #6f8674;">MODO</div>
+      <div style="font-size: 9.5px; font-family: 'IBM Plex Mono', monospace; color: #a3d24a;">{{ roleShort }}</div>
+    </div>
+    <div style="width: 40px; height: 40px; border-radius: 50%; background: #a3d24a; color: #16281f; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">M</div>
+  </div>
+
+  <div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+
+    <div style="min-height: 76px; flex: none; background: #ffffff; border-bottom: 1px solid #e2e5dc; display: flex; align-items: center; gap: 18px; padding: 0 28px; white-space: nowrap;">
+      <div>
+        <div style="font-size: 17px; font-weight: 600; letter-spacing: -0.01em;">{{ pageTitle }}</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #6c7a6e; margin-top: 3px;">{{ pageMeta }}</div>
+      </div>
+      <div style="flex: 1;"></div>
+      <div style="display: flex; align-items: center; gap: 10px; background: #f4f5f0; border: 1px solid #e2e5dc; border-radius: 8px; padding: 9px 12px; width: 260px;">
+        <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; color: #6c7a6e;"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M15.5 15.5 L21 21" stroke="currentColor" stroke-width="2"></path></svg>
+        <input type="text" placeholder="Buscar" style="flex: 1; border: none; background: transparent; outline: none; font-size: 13px; color: #16281f;"></input>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; background: #eef2e4; border: 1px solid #d9e3c3; border-radius: 8px; padding: 9px 14px;">
+        <div style="width: 8px; height: 8px; border-radius: 50%; background: #4c7a2f;"></div>
+        {{ statusLabel }}
+      </div>
+    </div>
+
+    <sc-if value="{{ isMapa }}" hint-placeholder-val="{{ true }}">
+      <div style="flex: 1; display: grid; grid-template-columns: 400px 1fr; min-height: 0;">
+
+        <div style="border-right: 1px solid #e2e5dc; background: #ffffff; display: flex; flex-direction: column; min-height: 0;">
+          <div style="padding: 16px 20px; border-bottom: 1px solid #eceee7; display: flex; flex-wrap: wrap; gap: 7px;">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #6c7a6e; width: 100%; letter-spacing: 0.06em;">FILTROS</div>
+            <sc-for list="{{ filters }}" as="f" hint-placeholder-count="5">
+              <div onClick="{{ f.toggle }}" style="font-size: 12px; padding: 5px 12px; border-radius: 20px; cursor: pointer; background: {{ f.bg }}; color: {{ f.fg }}; border: 1px solid {{ f.border }};">{{ f.label }}</div>
+            </sc-for>
+          </div>
+
+          <div style="flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; min-height: 0;">
+            <sc-for list="{{ ads }}" as="a" hint-placeholder-count="4">
+              <div style="border: 1px solid {{ a.cardBorder }}; border-radius: 12px; padding: 16px; background: #ffffff; box-shadow: {{ a.cardShadow }};">
+                <div style="display: flex; align-items: flex-start; gap: 12px;">
+                  <div style="width: 42px; height: 42px; border-radius: 10px; flex: none; background: {{ a.color }}; color: {{ a.iconFg }}; display: flex; align-items: center; justify-content: center;">
+                    <div style="width: 24px; height: 24px;" dangerouslySetInnerHTML="{{ a.icon }}"></div>
+                  </div>
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="display: flex; align-items: baseline; gap: 8px;">
+                      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 600;">{{ a.kg }}</div>
+                      <div style="font-size: 13px; font-weight: 600;">{{ a.material }}</div>
+                    </div>
+                    <div style="font-size: 12px; color: #5d6b5f; margin-top: 4px;">{{ a.place }}</div>
+                    <div style="display: flex; gap: 14px; margin-top: 10px; font-family: 'IBM Plex Mono', monospace; font-size: 11px;">
+                      <div>{{ a.dist }}</div>
+                      <div>{{ a.eta }}</div>
+                      <div>{{ a.window }}</div>
+                    </div>
+                  </div>
+                </div>
+                <div style="display: flex; gap: 8px; margin-top: 14px;">
+                  <div onClick="{{ a.claim }}" style="flex: 1; text-align: center; font-size: 13px; font-weight: 600; padding: 10px; border-radius: 8px; cursor: pointer; background: {{ a.btnBg }}; color: {{ a.btnFg }}; border: 1px solid {{ a.btnBorder }};">{{ a.btnLabel }}</div>
+                  <div onClick="{{ goChats }}" title="Abrir chat" style="border: 1px solid #d8dcd2; padding: 10px 14px; border-radius: 8px; cursor: pointer; display: flex; align-items: center;" style-hover="border-color: #16281f;">
+                    <svg viewBox="0 0 24 24" style="width: 17px; height: 17px; color: #16281f;"><path d="M3 5 H21 V16 H12 L7 20 V16 H3 Z" fill="none" stroke="currentColor" stroke-width="2"></path></svg>
+                  </div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="position: relative; min-height: 640px; min-width: 720px; background: #e7ebe1;">
+          <svg viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid slice" style="position: absolute; inset: 0; width: 100%; height: 100%;">
+            <rect x="0" y="0" width="1000" height="700" fill="#e7ebe1"></rect>
+            <rect x="40" y="40" width="240" height="180" rx="6" fill="#dde3d5"></rect>
+            <rect x="320" y="40" width="300" height="120" rx="6" fill="#dde3d5"></rect>
+            <rect x="660" y="40" width="300" height="200" rx="6" fill="#d5e0cb"></rect>
+            <rect x="40" y="260" width="180" height="220" rx="6" fill="#dde3d5"></rect>
+            <rect x="260" y="200" width="360" height="280" rx="6" fill="#dde3d5"></rect>
+            <rect x="660" y="280" width="300" height="200" rx="6" fill="#dde3d5"></rect>
+            <rect x="40" y="520" width="580" height="140" rx="6" fill="#dde3d5"></rect>
+            <rect x="660" y="520" width="300" height="140" rx="6" fill="#d5e0cb"></rect>
+            <path d="M0 240 H1000 M0 500 H1000 M240 0 V700 M640 0 V700" stroke="#ffffff" stroke-width="14"></path>
+            <path d="M0 130 H1000 M0 380 H1000 M440 0 V700 M840 0 V700" stroke="#f3f5ef" stroke-width="8"></path>
+            <polyline points="240,500 240,380 440,380 440,240 640,240" fill="none" stroke="#16281f" stroke-width="9" stroke-linecap="round"></polyline>
+            <polyline points="240,500 240,380 440,380 440,240 640,240" fill="none" stroke="#a3d24a" stroke-width="5" stroke-linecap="round"></polyline>
+          </svg>
+
+          <div style="position: absolute; left: 18px; top: 18px; display: flex; gap: 8px;">
+            <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 8px; padding: 8px 14px; font-size: 12px; font-weight: 600; cursor: pointer;">Optimizar ruta</div>
+            <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 8px; padding: 8px 14px; font-size: 12px; color: #3d4a3f; cursor: pointer;">Rutas guardadas</div>
+          </div>
+
+          <div style="position: absolute; top: 64px; right: 348px; bottom: 92px; left: 0;">
+          <div style="position: absolute; left: 22.5%; top: 70.5%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 4px;">
+            <div style="background: #16281f; color: #a3d24a; font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 3px 8px; border-radius: 4px;">TÚ</div>
+            <div style="width: 18px; height: 18px; border-radius: 50%; background: #16281f; border: 3px solid #ffffff;"></div>
+          </div>
+          <div style="position: absolute; left: 43.5%; top: 54%; transform: translate(-50%, -100%); background: #ffffff; border: 1px solid #16281f; border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 0 #16281f;">
+            <div style="width: 26px; height: 26px; border-radius: 7px; background: #e8b53a; color: #16281f; display: flex; align-items: center; justify-content: center; flex: none;">
+              <svg viewBox="0 0 24 24" style="width: 16px; height: 16px;" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.2 L20.3 8.1 V16 L12 19.9 L3.7 16 V8.1 Z"></path><path d="M3.7 8.1 L12 12 L20.3 8.1"></path><path d="M12 12 V19.9"></path></svg>
+            </div>
+            <div>
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600;">24 kg</div>
+              <div style="font-size: 10px; color: #5d6b5f;">Parada 1 · Cartón</div>
+            </div>
+          </div>
+          <div style="position: absolute; left: 63.5%; top: 34%; transform: translate(-50%, -100%); background: #ffffff; border: 1px solid #e2e5dc; border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 10px;">
+            <div style="width: 26px; height: 26px; border-radius: 7px; background: #4c7a2f; color: #ffffff; display: flex; align-items: center; justify-content: center; flex: none;">
+              <svg viewBox="0 0 24 24" style="width: 16px; height: 16px;" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3.6 H14 V5.8 C14 7.1 16 7.9 16 11 V18.8 A1.6 1.6 0 0 1 14.4 20.4 H9.6 A1.6 1.6 0 0 1 8 18.8 V11 C8 7.9 10 7.1 10 5.8 Z"></path><path d="M8 13 H16"></path></svg>
+            </div>
+            <div>
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600;">8,5 kg</div>
+              <div style="font-size: 10px; color: #5d6b5f;">Parada 2 · PET</div>
+            </div>
+          </div>
+          <div style="position: absolute; left: 79%; top: 76%; transform: translate(-50%, -50%); width: 34px; height: 34px; border-radius: 50%; background: #ffffff; border: 2px solid #5b7f9e; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #16281f;">31</div>
+          </div>
+
+          <div style="position: absolute; right: 18px; top: 18px; width: 320px; background: #ffffff; border: 1px solid #e2e5dc; border-radius: 14px; overflow: hidden;">
+            <div style="background: #16281f; padding: 14px 18px;">
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #a3d24a; letter-spacing: 0.08em;">RUTA ACTIVA</div>
+              <div style="display: flex; align-items: baseline; gap: 10px; margin-top: 6px;">
+                <div style="font-size: 26px; font-weight: 600; color: #ffffff; font-family: 'IBM Plex Mono', monospace;">{{ routeKg }}</div>
+                <div style="font-size: 12px; color: #c3d3c6;">{{ routeMeta }}</div>
+              </div>
+            </div>
+            <div style="padding: 16px 18px; display: flex; flex-direction: column; gap: 14px;">
+              <div style="display: flex; gap: 12px;">
+                <div style="display: flex; flex-direction: column; align-items: center; padding-top: 4px;">
+                  <div style="width: 10px; height: 10px; border-radius: 50%; background: #a3d24a;"></div>
+                  <div style="width: 2px; flex: 1; background: #e2e5dc; min-height: 34px;"></div>
+                  <div style="width: 10px; height: 10px; border-radius: 50%; border: 2px solid #c3cbbc;"></div>
+                </div>
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 18px;">
+                  <div>
+                    <div style="font-size: 13px; font-weight: 600;">Minimarket H&amp;J</div>
+                    <div style="font-size: 11px; color: #5d6b5f; margin-top: 2px;">Juan Flores · llega 14:35</div>
+                  </div>
+                  <div>
+                    <div style="font-size: 13px; font-weight: 600; color: #3d4a3f;">Bodega Olivo</div>
+                    <div style="font-size: 11px; color: #5d6b5f; margin-top: 2px;">Camila Salazar · llega 15:05</div>
+                  </div>
+                </div>
+              </div>
+              <div style="height: 1px; background: #eceee7;"></div>
+              <div style="display: flex; gap: 8px;">
+                <div onClick="{{ openScanner }}" style="flex: 1; background: #16281f; color: #ffffff; font-size: 13px; font-weight: 600; text-align: center; padding: 11px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                  <svg viewBox="0 0 24 24" style="width: 16px; height: 16px;"><rect x="4" y="4" width="6" height="6" fill="none" stroke="currentColor" stroke-width="2"></rect><rect x="14" y="4" width="6" height="6" fill="none" stroke="currentColor" stroke-width="2"></rect><rect x="4" y="14" width="6" height="6" fill="none" stroke="currentColor" stroke-width="2"></rect><path d="M14 14 H20 V20 H14 Z" fill="none" stroke="currentColor" stroke-width="2"></path></svg>
+                  Escanear QR
+                </div>
+                <div onClick="{{ goChats }}" title="Abrir chat" style="border: 1px solid #d8dcd2; padding: 11px 14px; border-radius: 8px; cursor: pointer; display: flex; align-items: center;">
+                  <svg viewBox="0 0 24 24" style="width: 17px; height: 17px; color: #16281f;"><path d="M3 5 H21 V16 H12 L7 20 V16 H3 Z" fill="none" stroke="currentColor" stroke-width="2"></path></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="position: absolute; right: 18px; bottom: 18px; background: #ffffff; border: 1px solid #e2e5dc; border-radius: 12px; padding: 14px 16px; display: flex; gap: 22px; align-items: center;">
+            <div>
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #6c7a6e; letter-spacing: 0.06em;">ANUNCIOS NUEVOS</div>
+              <div style="font-size: 12px; font-weight: 600; margin-top: 5px;">Publicados en los últimos 30 min</div>
+              <div style="font-size: 11px; color: #5d6b5f; margin-top: 4px;">Vidrio mixto · Latas de aluminio</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 600;">2</div>
+              <div style="font-size: 11px; color: #5d6b5f; margin-top: 4px;">sin reclamar</div>
+            </div>
+          </div>
+
+          <div style="position: absolute; left: 18px; bottom: 18px; background: #ffffff; border: 1px solid #e2e5dc; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: #3d4a3f;"><div style="width: 10px; height: 10px; border-radius: 3px; background: #4c7a2f;"></div>Centro de acopio</div>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: #3d4a3f;"><div style="width: 10px; height: 10px; border-radius: 3px; background: #e8b53a;"></div>Comercio / bodega</div>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: #3d4a3f;"><div style="width: 10px; height: 10px; border-radius: 3px; background: #5b7f9e;"></div>Punto municipal</div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isRecojos }}">
+      <div style="padding: 24px 28px 48px; display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start;">
+
+        <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 14px; overflow-x: auto;">
+          <div style="display: flex; gap: 6px; padding: 16px 20px; border-bottom: 1px solid #eceee7; min-width: 720px;">
+            <div style="background: #16281f; color: #ffffff; font-size: 12px; font-weight: 600; padding: 6px 13px; border-radius: 20px; cursor: pointer;">Activos · 2</div>
+            <div style="border: 1px solid #d8dcd2; color: #3d4a3f; font-size: 12px; padding: 6px 13px; border-radius: 20px; cursor: pointer;" style-hover="border-color: #4c7a2f;">Completados · 30</div>
+            <div style="border: 1px solid #d8dcd2; color: #3d4a3f; font-size: 12px; padding: 6px 13px; border-radius: 20px; cursor: pointer;" style-hover="border-color: #4c7a2f;">Cancelados · 1</div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 92px minmax(200px, 1.4fr) minmax(140px, 1fr) 130px 130px 92px; min-width: 720px; gap: 12px; padding: 13px 20px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e; border-bottom: 1px solid #eceee7;">
+            <div>CANT.</div>
+            <div>MATERIAL / LUGAR</div>
+            <div>CONTRAPARTE</div>
+            <div>VENTANA</div>
+            <div>ESTADO</div>
+            <div></div>
+          </div>
+
+          <sc-for list="{{ pickups }}" as="p" hint-placeholder-count="4">
+            <div style="display: grid; grid-template-columns: 92px minmax(200px, 1.4fr) minmax(140px, 1fr) 130px 130px 92px; min-width: 720px; gap: 12px; padding: 16px 20px; border-bottom: 1px solid #eceee7; align-items: center;">
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 17px; font-weight: 600;">{{ p.kg }}</div>
+              <div>
+                <div style="font-size: 13px; font-weight: 600;">{{ p.material }}</div>
+                <div style="font-size: 11.5px; color: #5d6b5f; margin-top: 2px;">{{ p.place }}</div>
+              </div>
+              <div style="font-size: 12.5px; color: #3d4a3f;">{{ p.person }}</div>
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #3d4a3f;">{{ p.window }}</div>
+              <div>
+                <div style="display: inline-block; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; background: {{ p.stateBg }}; color: {{ p.stateFg }};">{{ p.state }}</div>
+              </div>
+              <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <div onClick="{{ goChats }}" title="Abrir chat" style="border: 1px solid #d8dcd2; padding: 7px; border-radius: 7px; cursor: pointer; display: flex;" style-hover="border-color: #16281f;">
+                  <svg viewBox="0 0 24 24" style="width: 15px; height: 15px; color: #16281f;"><path d="M3 5 H21 V16 H12 L7 20 V16 H3 Z" fill="none" stroke="currentColor" stroke-width="2"></path></svg>
+                </div>
+                <div onClick="{{ openScanner }}" title="Escanear QR de entrega" style="border: 1px solid #d8dcd2; padding: 7px; border-radius: 7px; cursor: pointer; display: flex;" style-hover="border-color: #16281f;">
+                  <svg viewBox="0 0 24 24" style="width: 15px; height: 15px; color: #16281f;"><rect x="4" y="4" width="6" height="6" fill="none" stroke="currentColor" stroke-width="2"></rect><rect x="14" y="4" width="6" height="6" fill="none" stroke="currentColor" stroke-width="2"></rect><rect x="4" y="14" width="6" height="6" fill="none" stroke="currentColor" stroke-width="2"></rect><path d="M14 14 H20 V20 H14 Z" fill="none" stroke="currentColor" stroke-width="2"></path></svg>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 14px; padding: 20px;">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e;">RESUMEN DEL MES</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+              <div>
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 24px; font-weight: 600;">177,6</div>
+                <div style="font-size: 11px; color: #5d6b5f; margin-top: 3px;">kg recuperados</div>
+              </div>
+              <div>
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 24px; font-weight: 600;">30</div>
+                <div style="font-size: 11px; color: #5d6b5f; margin-top: 3px;">recojos</div>
+              </div>
+              <div>
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 24px; font-weight: 600;">4.9</div>
+                <div style="font-size: 11px; color: #5d6b5f; margin-top: 3px;">valoración</div>
+              </div>
+              <div>
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 24px; font-weight: 600;">98%</div>
+                <div style="font-size: 11px; color: #5d6b5f; margin-top: 3px;">cumplimiento</div>
+              </div>
+            </div>
+            <div style="height: 1px; background: #eceee7; margin: 18px 0 14px;"></div>
+            <div style="font-size: 11px; color: #5d6b5f;">Meta mensual 200 kg</div>
+            <div style="height: 7px; background: #eceee7; border-radius: 4px; margin-top: 8px; overflow: hidden;">
+              <div style="width: 89%; height: 100%; background: #a3d24a;"></div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; font-family: 'IBM Plex Mono', monospace; font-size: 11px; margin-top: 6px;">89%</div>
+          </div>
+
+          <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 14px; padding: 20px;">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e;">MATERIALES DEL MES</div>
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 16px;">
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 12px;"><div>Plástico</div><div style="font-family: 'IBM Plex Mono', monospace;">18,0 kg</div></div>
+                <div style="height: 6px; background: #eceee7; border-radius: 3px; margin-top: 6px; overflow: hidden;"><div style="width: 36%; height: 100%; background: #4c7a2f;"></div></div>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 12px;"><div>Papel y cartón</div><div style="font-family: 'IBM Plex Mono', monospace;">12,5 kg</div></div>
+                <div style="height: 6px; background: #eceee7; border-radius: 3px; margin-top: 6px; overflow: hidden;"><div style="width: 25%; height: 100%; background: #e8b53a;"></div></div>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 12px;"><div>Vidrio</div><div style="font-family: 'IBM Plex Mono', monospace;">10,0 kg</div></div>
+                <div style="height: 6px; background: #eceee7; border-radius: 3px; margin-top: 6px; overflow: hidden;"><div style="width: 20%; height: 100%; background: #5b7f9e;"></div></div>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 12px;"><div>Metal</div><div style="font-family: 'IBM Plex Mono', monospace;">9,5 kg</div></div>
+                <div style="height: 6px; background: #eceee7; border-radius: 3px; margin-top: 6px; overflow: hidden;"><div style="width: 19%; height: 100%; background: #b1573f;"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isChats }}">
+      <div style="flex: 1; display: grid; grid-template-columns: 320px 1fr 300px; min-height: 0;">
+
+        <div style="background: #ffffff; border-right: 1px solid #e2e5dc; display: flex; flex-direction: column; min-height: 0;">
+          <sc-for list="{{ threads }}" as="t" hint-placeholder-count="3">
+            <div onClick="{{ t.select }}" style="padding: 16px 18px; border-bottom: 1px solid #eceee7; cursor: pointer; display: flex; gap: 12px; background: {{ t.bg }};">
+              <div style="width: 36px; height: 36px; border-radius: 50%; flex: none; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; background: #eef2e4; color: #16281f;">{{ t.initials }}</div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="display: flex; justify-content: space-between; gap: 8px;">
+                  <div style="font-size: 13px; font-weight: 600;">{{ t.name }}</div>
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #8b9186;">{{ t.time }}</div>
+                </div>
+                <div style="font-size: 11.5px; color: #5d6b5f; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ t.preview }}</div>
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #4c7a2f; margin-top: 6px;">{{ t.tag }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display: flex; flex-direction: column; min-height: 0; background: #f4f5f0;">
+          <div style="background: #ffffff; border-bottom: 1px solid #e2e5dc; padding: 14px 22px; display: flex; align-items: center; gap: 12px;">
+            <div style="width: 34px; height: 34px; border-radius: 50%; background: #eef2e4; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">{{ activeInitials }}</div>
+            <div style="flex: 1;">
+              <div style="font-size: 14px; font-weight: 600;">{{ activeName }}</div>
+              <div style="font-size: 11px; color: #5d6b5f; margin-top: 2px;">{{ activeSub }}</div>
+            </div>
+            <div style="border: 1px solid #d8dcd2; border-radius: 7px; padding: 7px 12px; font-size: 12px; cursor: pointer;" style-hover="border-color: #16281f;">Ver anuncio</div>
+          </div>
+
+          <div style="flex: 1; overflow-y: auto; padding: 22px; display: flex; flex-direction: column; gap: 12px; min-height: 0;">
+            <div style="align-self: center; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #8b9186; background: #eceee7; padding: 4px 10px; border-radius: 12px;">HOY</div>
+            <sc-for list="{{ messages }}" as="msg" hint-placeholder-count="5">
+              <div style="max-width: 62%; align-self: {{ msg.align }}; background: {{ msg.bg }}; color: {{ msg.fg }}; border: 1px solid {{ msg.border }}; border-radius: 12px; padding: 11px 14px;">
+                <div style="font-size: 13px; line-height: 1.5;">{{ msg.text }}</div>
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; margin-top: 6px; color: {{ msg.metaFg }};">{{ msg.time }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="background: #ffffff; border-top: 1px solid #e2e5dc; padding: 14px 22px; display: flex; gap: 10px; align-items: center;">
+            <input type="text" placeholder="Escribe un mensaje" value="{{ draft }}" onChange="{{ onDraft }}" onKeyDown="{{ onDraftKey }}" style="flex: 1; border: 1px solid #e2e5dc; background: #f4f5f0; border-radius: 8px; padding: 11px 14px; font-size: 13px; outline: none; color: #16281f;"></input>
+            <div onClick="{{ send }}" style="background: #16281f; color: #ffffff; font-size: 13px; font-weight: 600; padding: 11px 20px; border-radius: 8px; cursor: pointer;" style-hover="background: #24402e;">Enviar</div>
+          </div>
+        </div>
+
+        <div style="background: #ffffff; border-left: 1px solid #e2e5dc; padding: 20px; display: flex; flex-direction: column; gap: 18px; overflow-y: auto;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e;">ENTREGA EN CURSO</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 600; margin-top: 8px;">24 kg</div>
+            <div style="font-size: 12px; color: #5d6b5f; margin-top: 2px;">Cartón plegado · Av. Pershing 345</div>
+          </div>
+          <div style="border: 1px solid #e2e5dc; border-radius: 12px; padding: 16px; text-align: center;">
+            <div style="font-size: 12.5px; font-weight: 600;">Confirmación por QR</div>
+            <div style="font-size: 11.5px; color: #5d6b5f; margin-top: 4px; line-height: 1.5;">El generador muestra su código al momento del recojo.</div>
+            <div style="display: flex; justify-content: center; margin: 14px 0 12px;">
+              <svg viewBox="0 0 60 60" style="width: 96px; height: 96px; color: #16281f;">
+                <rect x="4" y="4" width="16" height="16" fill="none" stroke="currentColor" stroke-width="4"></rect>
+                <rect x="40" y="4" width="16" height="16" fill="none" stroke="currentColor" stroke-width="4"></rect>
+                <rect x="4" y="40" width="16" height="16" fill="none" stroke="currentColor" stroke-width="4"></rect>
+                <rect x="28" y="28" width="6" height="6" fill="currentColor"></rect>
+                <rect x="40" y="28" width="6" height="6" fill="currentColor"></rect>
+                <rect x="52" y="28" width="4" height="6" fill="currentColor"></rect>
+                <rect x="28" y="40" width="6" height="6" fill="currentColor"></rect>
+                <rect x="40" y="46" width="6" height="6" fill="currentColor"></rect>
+                <rect x="28" y="16" width="6" height="6" fill="currentColor"></rect>
+                <rect x="16" y="28" width="6" height="6" fill="currentColor"></rect>
+                <rect x="4" y="28" width="6" height="6" fill="currentColor"></rect>
+              </svg>
+            </div>
+            <div onClick="{{ openScanner }}" style="background: #a3d24a; color: #16281f; font-size: 13px; font-weight: 600; padding: 11px; border-radius: 8px; cursor: pointer;" style-hover="background: #93c33a;">Abrir escáner</div>
+          </div>
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e;">CONTRAPARTE</div>
+            <div style="display: flex; flex-direction: column; gap: 9px; margin-top: 12px; font-size: 12.5px; color: #3d4a3f;">
+              <div style="display: flex; justify-content: space-between;"><div>Valoración</div><div style="font-family: 'IBM Plex Mono', monospace;">4.8 (241)</div></div>
+              <div style="display: flex; justify-content: space-between;"><div>Entregas</div><div style="font-family: 'IBM Plex Mono', monospace;">62</div></div>
+              <div style="display: flex; justify-content: space-between;"><div>Verificado</div><div style="color: #4c7a2f; font-weight: 600;">Sí</div></div>
+            </div>
+          </div>
+          <div onClick="{{ goSoporte }}" style="border: 1px solid #d8dcd2; border-radius: 8px; padding: 11px; text-align: center; font-size: 12.5px; font-weight: 600; cursor: pointer;" style-hover="border-color: #b1573f; color: #b1573f;">Reportar un problema</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isPublicaciones }}">
+      <div style="padding: 24px 28px 48px; display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start;">
+
+        <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 14px; overflow-x: auto;">
+          <div style="display: flex; gap: 6px; padding: 16px 20px; border-bottom: 1px solid #eceee7; min-width: 720px;">
+            <div style="background: #16281f; color: #ffffff; font-size: 12px; font-weight: 600; padding: 6px 13px; border-radius: 20px; cursor: pointer;">Activos · 3</div>
+            <div style="border: 1px solid #d8dcd2; color: #3d4a3f; font-size: 12px; padding: 6px 13px; border-radius: 20px; cursor: pointer;" style-hover="border-color: #4c7a2f;">Completados · 12</div>
+            <div style="border: 1px solid #d8dcd2; color: #3d4a3f; font-size: 12px; padding: 6px 13px; border-radius: 20px; cursor: pointer;" style-hover="border-color: #4c7a2f;">Cancelados · 1</div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 92px minmax(200px, 1.4fr) minmax(140px, 1fr) 130px 130px 92px; min-width: 720px; gap: 12px; padding: 13px 20px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e; border-bottom: 1px solid #eceee7;">
+            <div>CANT.</div>
+            <div>MATERIAL / PUBLICADO</div>
+            <div>RECICLADOR</div>
+            <div>VENTANA</div>
+            <div>ESTADO</div>
+            <div></div>
+          </div>
+
+          <sc-for list="{{ publications }}" as="pub" hint-placeholder-count="4">
+            <div style="display: grid; grid-template-columns: 92px minmax(200px, 1.4fr) minmax(140px, 1fr) 130px 130px 92px; min-width: 720px; gap: 12px; padding: 16px 20px; border-bottom: 1px solid #eceee7; align-items: center;">
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 17px; font-weight: 600;">{{ pub.kg }}</div>
+              <div>
+                <div style="font-size: 13px; font-weight: 600;">{{ pub.material }}</div>
+                <div style="font-size: 11.5px; color: #5d6b5f; margin-top: 2px;">{{ pub.posted }}</div>
+              </div>
+              <div style="font-size: 12.5px; color: {{ pub.personFg }};">{{ pub.person }}</div>
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #3d4a3f;">{{ pub.window }}</div>
+              <div>
+                <div style="display: inline-block; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; background: {{ pub.stateBg }}; color: {{ pub.stateFg }};">{{ pub.state }}</div>
+              </div>
+              <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <div onClick="{{ goChats }}" title="Abrir chat" style="border: 1px solid #d8dcd2; padding: 7px; border-radius: 7px; cursor: pointer; display: flex;" style-hover="border-color: #16281f;">
+                  <svg viewBox="0 0 24 24" style="width: 15px; height: 15px; color: #16281f;"><path d="M3 5 H21 V16 H12 L7 20 V16 H3 Z" fill="none" stroke="currentColor" stroke-width="2"></path></svg>
+                </div>
+                <div title="Ver anuncio" style="border: 1px solid #d8dcd2; padding: 7px; border-radius: 7px; cursor: pointer; display: flex;" style-hover="border-color: #16281f;">
+                  <svg viewBox="0 0 24 24" style="width: 15px; height: 15px; color: #16281f;" fill="none" stroke="currentColor" stroke-width="2"><path d="M2.5 12 C5 7.5 8.3 5.5 12 5.5 C15.7 5.5 19 7.5 21.5 12 C19 16.5 15.7 18.5 12 18.5 C8.3 18.5 5 16.5 2.5 12 Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 14px; padding: 20px;">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e;">RESUMEN DEL MES</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+              <div>
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 24px; font-weight: 600;">148,5</div>
+                <div style="font-size: 11px; color: #5d6b5f; margin-top: 3px;">kg entregados</div>
+              </div>
+              <div>
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 24px; font-weight: 600;">12</div>
+                <div style="font-size: 11px; color: #5d6b5f; margin-top: 3px;">publicaciones</div>
+              </div>
+              <div>
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 24px; font-weight: 600;">4.8</div>
+                <div style="font-size: 11px; color: #5d6b5f; margin-top: 3px;">valoración</div>
+              </div>
+              <div>
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 24px; font-weight: 600;">92%</div>
+                <div style="font-size: 11px; color: #5d6b5f; margin-top: 3px;">tasa de recojo</div>
+              </div>
+            </div>
+            <div style="height: 1px; background: #eceee7; margin: 18px 0 14px;"></div>
+            <div style="font-size: 11px; color: #5d6b5f;">Meta mensual 160 kg</div>
+            <div style="height: 7px; background: #eceee7; border-radius: 4px; margin-top: 8px; overflow: hidden;">
+              <div style="width: 93%; height: 100%; background: #a3d24a;"></div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; font-family: 'IBM Plex Mono', monospace; font-size: 11px; margin-top: 6px;">93%</div>
+          </div>
+
+          <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 14px; padding: 20px;">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e;">MATERIALES DEL MES</div>
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 16px;">
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 12px;"><div>Papel y cartón</div><div style="font-family: 'IBM Plex Mono', monospace;">62,0 kg</div></div>
+                <div style="height: 6px; background: #eceee7; border-radius: 3px; margin-top: 6px; overflow: hidden;"><div style="width: 42%; height: 100%; background: #e8b53a;"></div></div>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 12px;"><div>Vidrio</div><div style="font-family: 'IBM Plex Mono', monospace;">38,5 kg</div></div>
+                <div style="height: 6px; background: #eceee7; border-radius: 3px; margin-top: 6px; overflow: hidden;"><div style="width: 26%; height: 100%; background: #5b7f9e;"></div></div>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 12px;"><div>Plástico</div><div style="font-family: 'IBM Plex Mono', monospace;">30,0 kg</div></div>
+                <div style="height: 6px; background: #eceee7; border-radius: 3px; margin-top: 6px; overflow: hidden;"><div style="width: 20%; height: 100%; background: #4c7a2f;"></div></div>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 12px;"><div>Metal</div><div style="font-family: 'IBM Plex Mono', monospace;">18,0 kg</div></div>
+                <div style="height: 6px; background: #eceee7; border-radius: 3px; margin-top: 6px; overflow: hidden;"><div style="width: 12%; height: 100%; background: #b1573f;"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isPublicar }}">
+      <div style="padding: 24px 28px 48px; display: grid; grid-template-columns: 1fr 380px; gap: 20px; align-items: start;">
+
+        <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 14px; padding: 24px 26px;">
+          <div style="font-size: 15px; font-weight: 600;">Anunciar material</div>
+          <div style="font-size: 12.5px; color: #5d6b5f; margin-top: 4px;">Los recicladores cerca de ti verán el anuncio en el mapa al publicarlo.</div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px 24px; margin-top: 24px;">
+            <div>
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e;">TIPO DE MATERIAL</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px;">
+                <sc-for list="{{ matChips }}" as="m" hint-placeholder-count="6">
+                  <div onClick="{{ m.toggle }}" style="font-size: 12px; padding: 7px 13px; border-radius: 8px; cursor: pointer; background: {{ m.bg }}; color: {{ m.fg }}; border: 1px solid {{ m.border }};">{{ m.label }}</div>
+                </sc-for>
+              </div>
+            </div>
+            <div>
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e;">CANTIDAD APROXIMADA</div>
+              <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+                <input type="text" value="{{ qty }}" onChange="{{ onQty }}" style="width: 110px; border: 1px solid #e2e5dc; background: #f4f5f0; border-radius: 8px; padding: 11px 14px; font-family: 'IBM Plex Mono', monospace; font-size: 16px; outline: none; color: #16281f;"></input>
+                <div style="font-size: 13px; color: #3d4a3f;">kg</div>
+                <div style="display: flex; gap: 6px; margin-left: 6px;">
+                  <div onClick="{{ qty5 }}" style="border: 1px solid #d8dcd2; border-radius: 20px; padding: 6px 12px; font-size: 11.5px; cursor: pointer;" style-hover="border-color: #4c7a2f;">5</div>
+                  <div onClick="{{ qty10 }}" style="border: 1px solid #d8dcd2; border-radius: 20px; padding: 6px 12px; font-size: 11.5px; cursor: pointer;" style-hover="border-color: #4c7a2f;">10</div>
+                  <div onClick="{{ qty25 }}" style="border: 1px solid #d8dcd2; border-radius: 20px; padding: 6px 12px; font-size: 11.5px; cursor: pointer;" style-hover="border-color: #4c7a2f;">25</div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e;">DISPONIBILIDAD</div>
+              <div style="display: flex; gap: 8px; margin-top: 10px;">
+                <input type="text" placeholder="Hoy" style="flex: 1; border: 1px solid #e2e5dc; background: #f4f5f0; border-radius: 8px; padding: 11px 14px; font-size: 13px; outline: none; color: #16281f;"></input>
+                <input type="text" placeholder="14:00 – 18:00" style="flex: 1; border: 1px solid #e2e5dc; background: #f4f5f0; border-radius: 8px; padding: 11px 14px; font-size: 13px; outline: none; color: #16281f;"></input>
+              </div>
+            </div>
+            <div>
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e;">PAGO (OPCIONAL)</div>
+              <div style="display: flex; gap: 7px; margin-top: 10px;">
+                <div style="border: 1px solid #16281f; border-radius: 8px; padding: 9px 14px; font-size: 12px; font-weight: 600; cursor: pointer;">Sin pago</div>
+                <div style="border: 1px solid #d8dcd2; border-radius: 8px; padding: 9px 14px; font-size: 12px; cursor: pointer;" style-hover="border-color: #4c7a2f;">Yape</div>
+                <div style="border: 1px solid #d8dcd2; border-radius: 8px; padding: 9px 14px; font-size: 12px; cursor: pointer;" style-hover="border-color: #4c7a2f;">Efectivo</div>
+              </div>
+            </div>
+            <div style="grid-column: span 2;">
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e;">NOTA PARA EL RECICLADOR (OPCIONAL)</div>
+              <textarea placeholder="Ej. las cajas están en la puerta lateral, toca el timbre 2." style="width: 100%; height: 84px; resize: none; border: 1px solid #e2e5dc; background: #f4f5f0; border-radius: 8px; padding: 12px 14px; font-size: 13px; outline: none; margin-top: 10px; color: #16281f; line-height: 1.5;"></textarea>
+            </div>
+            <div style="grid-column: span 2;">
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e;">FOTO (OPCIONAL)</div>
+              <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <div title="Agregar foto del material" style="width: 82px; height: 82px; border: 1px dashed #c3cbbc; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: #6c7a6e; cursor: pointer;" style-hover="border-color: #4c7a2f; color: #4c7a2f;">
+                  <svg viewBox="0 0 24 24" style="width: 24px; height: 24px;" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.2" y="5.2" width="17.6" height="13.6" rx="2.2"></rect><circle cx="8.6" cy="10.2" r="1.7"></circle><path d="M3.6 16.6 L9 11.4 L13 15 L16 12.6 L20.4 16.6"></path></svg>
+                  <div style="font-size: 10px;">Agregar</div>
+                </div>
+                <div style="width: 82px; height: 82px; border-radius: 10px; background: #eceee7; display: flex; align-items: center; justify-content: center; color: #a8b2a2;">
+                  <svg viewBox="0 0 24 24" style="width: 26px; height: 26px;" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.2" y="5.2" width="17.6" height="13.6" rx="2.2"></rect><circle cx="8.6" cy="10.2" r="1.7"></circle><path d="M3.6 16.6 L9 11.4 L13 15 L16 12.6 L20.4 16.6"></path></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 12px; margin-top: 26px; padding-top: 20px; border-top: 1px solid #eceee7;">
+            <div onClick="{{ publish }}" style="background: #a3d24a; color: #16281f; font-size: 13.5px; font-weight: 600; padding: 12px 28px; border-radius: 8px; cursor: pointer;" style-hover="background: #93c33a;">Publicar anuncio</div>
+            <div style="border: 1px solid #d8dcd2; border-radius: 8px; padding: 12px 22px; font-size: 13px; cursor: pointer;" style-hover="border-color: #16281f;">Guardar borrador</div>
+            <div style="flex: 1;"></div>
+            <div style="font-size: 12px; color: #5d6b5f;">{{ publishHint }}</div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 14px; overflow: hidden;">
+            <div style="height: 190px; position: relative; background: #e7ebe1;">
+              <svg viewBox="0 0 400 190" preserveAspectRatio="xMidYMid slice" style="position: absolute; inset: 0; width: 100%; height: 100%;">
+                <rect x="0" y="0" width="400" height="190" fill="#e7ebe1"></rect>
+                <rect x="20" y="16" width="130" height="70" rx="5" fill="#dde3d5"></rect>
+                <rect x="190" y="16" width="150" height="70" rx="5" fill="#dde3d5"></rect>
+                <rect x="20" y="120" width="130" height="60" rx="5" fill="#dde3d5"></rect>
+                <rect x="190" y="120" width="150" height="60" rx="5" fill="#d5e0cb"></rect>
+                <path d="M0 103 H400 M170 0 V190" stroke="#ffffff" stroke-width="12"></path>
+              </svg>
+              <div style="position: absolute; left: 42.5%; top: 54%; transform: translate(-50%, -100%); display: flex; flex-direction: column; align-items: center;">
+                <div style="background: #16281f; color: #a3d24a; font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 4px 9px; border-radius: 5px;">TU UBICACIÓN</div>
+                <div style="width: 2px; height: 12px; background: #16281f;"></div>
+              </div>
+              <div style="position: absolute; right: 12px; bottom: 12px; background: #ffffff; border: 1px solid #e2e5dc; border-radius: 7px; padding: 7px 12px; font-size: 11.5px; font-weight: 600; cursor: pointer;">Ajustar punto</div>
+            </div>
+            <div style="padding: 16px 18px;">
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e;">DIRECCIÓN</div>
+              <div style="font-size: 13px; font-weight: 600; margin-top: 7px;">Av. Pershing 345, Magdalena</div>
+              <div style="font-size: 11.5px; color: #5d6b5f; margin-top: 3px;">Referencia: frente al parque</div>
+            </div>
+          </div>
+
+          <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 14px; padding: 20px;">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e;">VISTA PREVIA DEL ANUNCIO</div>
+            <div style="border: 1px solid #16281f; border-radius: 12px; padding: 16px; margin-top: 14px; box-shadow: 0 2px 0 #16281f;">
+              <div style="display: flex; align-items: flex-start; gap: 12px;">
+                <div style="width: 40px; height: 40px; border-radius: 10px; flex: none; background: {{ previewColor }}; color: {{ previewIconFg }}; display: flex; align-items: center; justify-content: center;">
+                  <div style="width: 23px; height: 23px;" dangerouslySetInnerHTML="{{ previewIcon }}"></div>
+                </div>
+                <div style="flex: 1;">
+                  <div style="display: flex; align-items: baseline; gap: 8px;">
+                    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 600;">{{ previewKg }}</div>
+                    <div style="font-size: 13px; font-weight: 600;">{{ previewMat }}</div>
+                  </div>
+                  <div style="font-size: 11.5px; color: #5d6b5f; margin-top: 4px;">Minimarket H&amp;J · Magdalena</div>
+                  <div style="display: flex; gap: 12px; margin-top: 9px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px;">
+                    <div>HOY 14:00–18:00</div>
+                    <div>SIN PAGO</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isPerfil }}">
+      <div style="padding: 24px 28px 48px; display: grid; grid-template-columns: 360px 1fr; gap: 20px; align-items: start;">
+
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 14px; padding: 24px;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+              <div style="width: 64px; height: 64px; border-radius: 50%; background: #16281f; color: #a3d24a; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 600; flex: none;">M</div>
+              <div>
+                <div style="font-size: 17px; font-weight: 600;">Marco Quispe</div>
+                <div style="font-size: 12px; color: #5d6b5f; margin-top: 3px;">Reciclador · Lima Centro</div>
+                <div style="display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; background: #eef2e4; border-radius: 6px; padding: 4px 9px; font-size: 11px; font-weight: 600; color: #3f6224;">Verificado</div>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; margin-top: 20px;">
+              <div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid #eceee7; font-size: 12.5px;"><div style="color: #5d6b5f;">Correo</div><div>marco.q@gmail.com</div></div>
+              <div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid #eceee7; font-size: 12.5px;"><div style="color: #5d6b5f;">Teléfono</div><div style="font-family: 'IBM Plex Mono', monospace;">+51 924 283 725</div></div>
+              <div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid #eceee7; font-size: 12.5px;"><div style="color: #5d6b5f;">Materiales</div><div>Cartón, PET, vidrio</div></div>
+              <div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid #eceee7; font-size: 12.5px;"><div style="color: #5d6b5f;">Visibilidad</div><div style="color: #4c7a2f; font-weight: 600;">Activa</div></div>
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 18px;">
+              <div style="flex: 1; border: 1px solid #16281f; border-radius: 8px; padding: 10px; text-align: center; font-size: 12.5px; font-weight: 600; cursor: pointer;" style-hover="background: #16281f; color: #ffffff;">Editar perfil</div>
+              <div style="border: 1px solid #d8dcd2; border-radius: 8px; padding: 10px 14px; font-size: 12.5px; cursor: pointer;" style-hover="border-color: #16281f;">Documentos</div>
+            </div>
+          </div>
+
+          <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 14px; padding: 22px 24px;">
+            <div style="font-size: 14px; font-weight: 600;">Métodos de pago</div>
+            <div style="display: flex; flex-direction: column; margin-top: 8px;">
+              <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0; border-top: 1px solid #eceee7;">
+                <div style="width: 40px; height: 28px; border-radius: 5px; background: #1a1f71; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; font-style: italic;">VISA</div>
+                <div style="flex: 1; font-size: 12.5px;">•••• 4821</div>
+                <div style="font-size: 11px; font-weight: 600; color: #3f6224; background: #eef2e4; padding: 4px 9px; border-radius: 6px;">Predeterminado</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0; border-top: 1px solid #eceee7;">
+                <div style="width: 40px; height: 28px; border-radius: 5px; background: #742284; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700;">Yape</div>
+                <div style="flex: 1; font-size: 12.5px;">+51 924 ••• 725</div>
+                <div style="font-size: 11.5px; color: #4c7a2f; font-weight: 600; cursor: pointer;">Usar</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0; border-top: 1px solid #eceee7; cursor: pointer;">
+                <div style="width: 40px; height: 28px; border: 1px dashed #c3cbbc; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #6c7a6e;">+</div>
+                <div style="flex: 1; font-size: 12.5px; color: #5d6b5f;">Agregar método</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 14px; padding: 22px 24px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+              <div style="font-size: 15px; font-weight: 600;">Historial de actividad</div>
+              <div style="display: flex; gap: 8px;">
+                <div style="border: 1px solid #d8dcd2; border-radius: 7px; padding: 7px 13px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; cursor: pointer;" style-hover="border-color: #16281f;">PDF</div>
+                <div style="border: 1px solid #d8dcd2; border-radius: 7px; padding: 7px 13px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; cursor: pointer;" style-hover="border-color: #16281f;">CSV</div>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 88px 1.3fr 1fr 120px 90px; gap: 12px; padding: 14px 0 10px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e; border-bottom: 1px solid #eceee7;">
+              <div>TIPO</div>
+              <div>MATERIAL</div>
+              <div>CONTRAPARTE</div>
+              <div>FECHA</div>
+              <div>VALORACIÓN</div>
+            </div>
+            <div style="display: grid; grid-template-columns: 88px 1.3fr 1fr 120px 90px; gap: 12px; padding: 14px 0; border-bottom: 1px solid #eceee7; align-items: center; font-size: 12.5px;">
+              <div style="font-weight: 600;">Recojo</div>
+              <div>Bolsas de plástico · 9 kg</div>
+              <div>Emilia Valencia</div>
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #5d6b5f;">Hace 8 h</div>
+              <div style="font-family: 'IBM Plex Mono', monospace;">5.0</div>
+            </div>
+            <div style="display: grid; grid-template-columns: 88px 1.3fr 1fr 120px 90px; gap: 12px; padding: 14px 0; border-bottom: 1px solid #eceee7; align-items: center; font-size: 12.5px;">
+              <div style="font-weight: 600;">Recojo</div>
+              <div>Cartón plegado · 22 kg</div>
+              <div>Juan Flores</div>
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #5d6b5f;">Hace 20 h</div>
+              <div style="font-family: 'IBM Plex Mono', monospace;">4.8</div>
+            </div>
+            <div style="display: grid; grid-template-columns: 88px 1.3fr 1fr 120px 90px; gap: 12px; padding: 14px 0; align-items: center; font-size: 12.5px;">
+              <div style="font-weight: 600;">Recojo</div>
+              <div>Vidrio mixto · 14 kg</div>
+              <div>Camila Salazar</div>
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #5d6b5f;">Hace 2 d</div>
+              <div style="font-family: 'IBM Plex Mono', monospace;">4.9</div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 14px; padding: 22px 24px;">
+              <div style="font-size: 14px; font-weight: 600;">Valoraciones recibidas</div>
+              <div style="display: flex; align-items: baseline; gap: 10px; margin-top: 14px;">
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 32px; font-weight: 600;">4.9</div>
+                <div style="font-size: 12px; color: #5d6b5f;">de 30 entregas</div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 18px;">
+                <div style="border-top: 1px solid #eceee7; padding-top: 12px;">
+                  <div style="font-size: 12px; color: #3d4a3f; line-height: 1.5;">“Muy puntual y ordenado con las cajas.”</div>
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #8b9186; margin-top: 6px;">JUAN FLORES · 5.0</div>
+                </div>
+                <div style="border-top: 1px solid #eceee7; padding-top: 12px;">
+                  <div style="font-size: 12px; color: #3d4a3f; line-height: 1.5;">“Avisó por chat antes de llegar, todo claro.”</div>
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #8b9186; margin-top: 6px;">EMILIA VALENCIA · 5.0</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 14px; padding: 22px 24px;">
+              <div style="font-size: 14px; font-weight: 600;">Verificación</div>
+              <div style="font-size: 12px; color: #5d6b5f; margin-top: 6px; line-height: 1.55;">Tus documentos fueron revisados el 12 de agosto. La verificación te da prioridad en anuncios nuevos.</div>
+              <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 16px;">
+                <div style="display: flex; align-items: center; gap: 10px; border: 1px solid #eceee7; border-radius: 8px; padding: 11px 13px;">
+                  <div style="width: 8px; height: 8px; border-radius: 50%; background: #4c7a2f;"></div>
+                  <div style="flex: 1; font-size: 12.5px;">Documento de identidad</div>
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #4c7a2f;">OK</div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px; border: 1px solid #eceee7; border-radius: 8px; padding: 11px 13px;">
+                  <div style="width: 8px; height: 8px; border-radius: 50%; background: #4c7a2f;"></div>
+                  <div style="flex: 1; font-size: 12.5px;">Carné de reciclador</div>
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #4c7a2f;">OK</div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px; border: 1px solid #eceee7; border-radius: 8px; padding: 11px 13px;">
+                  <div style="width: 8px; height: 8px; border-radius: 50%; background: #e8b53a;"></div>
+                  <div style="flex: 1; font-size: 12.5px;">Constancia municipal</div>
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #8a6a1f;">POR VENCER</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isSoporte }}">
+      <div style="padding: 24px 28px 48px; display: grid; grid-template-columns: 1fr 360px; gap: 20px; align-items: start;">
+
+        <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 14px; padding: 24px 26px;">
+          <div style="font-size: 15px; font-weight: 600;">Preguntas frecuentes</div>
+          <div style="display: flex; flex-direction: column; margin-top: 8px;">
+            <sc-for list="{{ faqs }}" as="q" hint-placeholder-count="5">
+              <div style="border-top: 1px solid #eceee7; padding: 16px 0;">
+                <div onClick="{{ q.toggle }}" style="display: flex; align-items: center; gap: 14px; cursor: pointer;">
+                  <div style="flex: 1; font-size: 13.5px; font-weight: 600;">{{ q.q }}</div>
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 15px; color: #6c7a6e;">{{ q.sign }}</div>
+                </div>
+                <sc-if value="{{ q.open }}">
+                  <div style="font-size: 12.5px; color: #3d4a3f; line-height: 1.6; margin-top: 10px; max-width: 620px;">{{ q.a }}</div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          <div style="background: #16281f; border-radius: 14px; padding: 22px 24px;">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: #a3d24a;">SITUACIÓN EXTREMA</div>
+            <div style="font-size: 15px; font-weight: 600; color: #ffffff; margin-top: 10px; line-height: 1.4;">Habla por teléfono con el equipo administrativo</div>
+            <div style="font-size: 12px; color: #c3d3c6; margin-top: 8px; line-height: 1.55;">Para riesgos de seguridad, incumplimientos graves o suplantación de identidad.</div>
+            <div style="background: #a3d24a; color: #16281f; font-size: 13.5px; font-weight: 600; text-align: center; padding: 12px; border-radius: 8px; margin-top: 18px; cursor: pointer;" style-hover="background: #93c33a;">Llamar ahora</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8fa392; text-align: center; margin-top: 10px;">DISPONIBLE 24/7</div>
+          </div>
+
+          <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 14px; padding: 22px 24px;">
+            <div style="font-size: 14px; font-weight: 600;">Reportar un caso</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px;">
+              <div style="border: 1px solid #16281f; border-radius: 20px; padding: 6px 13px; font-size: 12px; font-weight: 600; cursor: pointer;">Incumplimiento</div>
+              <div style="border: 1px solid #d8dcd2; border-radius: 20px; padding: 6px 13px; font-size: 12px; cursor: pointer;" style-hover="border-color: #4c7a2f;">Material distinto</div>
+              <div style="border: 1px solid #d8dcd2; border-radius: 20px; padding: 6px 13px; font-size: 12px; cursor: pointer;" style-hover="border-color: #4c7a2f;">Error en la app</div>
+            </div>
+            <textarea placeholder="Cuéntanos qué pasó" style="width: 100%; height: 92px; resize: none; border: 1px solid #e2e5dc; background: #f4f5f0; border-radius: 8px; padding: 12px 14px; font-size: 13px; outline: none; margin-top: 14px; color: #16281f; line-height: 1.5;"></textarea>
+            <div style="background: #16281f; color: #ffffff; font-size: 13px; font-weight: 600; text-align: center; padding: 11px; border-radius: 8px; margin-top: 12px; cursor: pointer;" style-hover="background: #24402e;">Enviar reporte</div>
+          </div>
+
+          <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 14px; padding: 22px 24px;">
+            <div style="font-size: 14px; font-weight: 600;">Mis tickets</div>
+            <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0 0; margin-top: 8px; border-top: 1px solid #eceee7;">
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #6c7a6e;">#4821</div>
+              <div style="flex: 1; font-size: 12.5px;">Material distinto al anunciado</div>
+              <div style="font-size: 11px; font-weight: 600; background: #eef2e4; color: #3f6224; padding: 4px 9px; border-radius: 6px;">Resuelto</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0 0; margin-top: 14px; border-top: 1px solid #eceee7;">
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #6c7a6e;">#4903</div>
+              <div style="flex: 1; font-size: 12.5px;">No pudo confirmar el QR</div>
+              <div style="font-size: 11px; font-weight: 600; background: #fdf3dd; color: #8a6a1f; padding: 4px 9px; border-radius: 6px;">En revisión</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+
+  <sc-if value="{{ scannerOpen }}">
+    <div style="position: fixed; inset: 0; background: rgba(22,40,31,0.62); display: flex; align-items: center; justify-content: center; z-index: 60;">
+      <div style="width: 420px; background: #ffffff; border-radius: 16px; overflow: hidden;">
+        <div style="background: #16281f; padding: 18px 22px; display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: #a3d24a;">CONFIRMAR ENTREGA</div>
+            <div style="font-size: 15px; font-weight: 600; color: #ffffff; margin-top: 5px;">Minimarket H&amp;J · 24 kg</div>
+          </div>
+          <div onClick="{{ closeScanner }}" title="Cerrar" style="color: #8fa392; font-size: 20px; cursor: pointer; line-height: 1;">×</div>
+        </div>
+        <div style="padding: 24px 22px;">
+          <div style="position: relative; height: 220px; border-radius: 12px; background: #16281f; display: flex; align-items: center; justify-content: center;">
+            <svg viewBox="0 0 60 60" style="width: 130px; height: 130px; color: #a3d24a;">
+              <rect x="4" y="4" width="16" height="16" fill="none" stroke="currentColor" stroke-width="4"></rect>
+              <rect x="40" y="4" width="16" height="16" fill="none" stroke="currentColor" stroke-width="4"></rect>
+              <rect x="4" y="40" width="16" height="16" fill="none" stroke="currentColor" stroke-width="4"></rect>
+              <rect x="28" y="28" width="6" height="6" fill="currentColor"></rect>
+              <rect x="40" y="28" width="6" height="6" fill="currentColor"></rect>
+              <rect x="28" y="40" width="6" height="6" fill="currentColor"></rect>
+              <rect x="40" y="46" width="6" height="6" fill="currentColor"></rect>
+              <rect x="28" y="16" width="6" height="6" fill="currentColor"></rect>
+              <rect x="16" y="28" width="6" height="6" fill="currentColor"></rect>
+            </svg>
+            <div style="position: absolute; left: 24px; top: 24px; width: 26px; height: 26px; border-left: 3px solid #a3d24a; border-top: 3px solid #a3d24a;"></div>
+            <div style="position: absolute; right: 24px; top: 24px; width: 26px; height: 26px; border-right: 3px solid #a3d24a; border-top: 3px solid #a3d24a;"></div>
+            <div style="position: absolute; left: 24px; bottom: 24px; width: 26px; height: 26px; border-left: 3px solid #a3d24a; border-bottom: 3px solid #a3d24a;"></div>
+            <div style="position: absolute; right: 24px; bottom: 24px; width: 26px; height: 26px; border-right: 3px solid #a3d24a; border-bottom: 3px solid #a3d24a;"></div>
+          </div>
+          <div style="font-size: 12.5px; color: #3d4a3f; text-align: center; margin-top: 16px; line-height: 1.55;">Apunta al código que muestra el generador. Al confirmar se registra la entrega y podrán valorarse.</div>
+          <div style="display: flex; gap: 8px; margin-top: 18px;">
+            <div onClick="{{ confirmDelivery }}" style="flex: 1; background: #a3d24a; color: #16281f; font-size: 13.5px; font-weight: 600; text-align: center; padding: 12px; border-radius: 8px; cursor: pointer;" style-hover="background: #93c33a;">Confirmar entrega</div>
+            <div onClick="{{ closeScanner }}" style="border: 1px solid #d8dcd2; border-radius: 8px; padding: 12px 18px; font-size: 13px; cursor: pointer;" style-hover="border-color: #16281f;">Cancelar</div>
+          </div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #8b9186; text-align: center; margin-top: 12px;">O INGRESA EL CÓDIGO MANUALMENTE</div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ rateOpen }}">
+    <div style="position: fixed; inset: 0; background: rgba(22,40,31,0.62); display: flex; align-items: center; justify-content: center; z-index: 60;">
+      <div style="width: 400px; background: #ffffff; border-radius: 16px; padding: 26px;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: #6c7a6e;">ENTREGA CONFIRMADA</div>
+        <div style="font-size: 17px; font-weight: 600; margin-top: 10px;">24 kg de cartón recuperados</div>
+        <div style="font-size: 12.5px; color: #5d6b5f; margin-top: 6px; line-height: 1.55;">¿Cómo fue tu experiencia con Juan Flores?</div>
+        <div style="display: flex; gap: 8px; margin: 20px 0 4px;">
+          <sc-for list="{{ stars }}" as="s" hint-placeholder-count="5">
+            <div onClick="{{ s.set }}" style="flex: 1; height: 46px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; background: {{ s.bg }}; color: {{ s.fg }}; border: 1px solid {{ s.border }};">{{ s.n }}</div>
+          </sc-for>
+        </div>
+        <textarea placeholder="Comentario (opcional)" style="width: 100%; height: 76px; resize: none; border: 1px solid #e2e5dc; background: #f4f5f0; border-radius: 8px; padding: 12px 14px; font-size: 13px; outline: none; margin-top: 14px; color: #16281f; line-height: 1.5;"></textarea>
+        <div style="display: flex; gap: 8px; margin-top: 16px;">
+          <div onClick="{{ closeRate }}" style="flex: 1; background: #16281f; color: #ffffff; font-size: 13.5px; font-weight: 600; text-align: center; padding: 12px; border-radius: 8px; cursor: pointer;" style-hover="background: #24402e;">Enviar valoración</div>
+          <div onClick="{{ closeRate }}" style="border: 1px solid #d8dcd2; border-radius: 8px; padding: 12px 18px; font-size: 13px; cursor: pointer;" style-hover="border-color: #16281f;">Después</div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;defaultTab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;mapa&quot;,&quot;recojos&quot;,&quot;chats&quot;,&quot;publicar&quot;,&quot;publicaciones&quot;,&quot;perfil&quot;,&quot;soporte&quot;],&quot;default&quot;:&quot;mapa&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Navegación&quot;}}">
+const ICONS = {
+  mapa: '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6.5 L9.5 4 L15 6.5 L21 4 V17.5 L15 20 L9.5 17.5 L3 20 Z M9.5 4 V17.5 M15 6.5 V20"/></svg>',
+  recojos: '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6 H20 M4 12 H20 M4 18 H14"/></svg>',
+  chats: '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 5 H21 V16 H12 L7 20 V16 H3 Z"/></svg>',
+  publicaciones: '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4.5" y="3.5" width="15" height="17" rx="2"/><path d="M8 8.5 H16 M8 12 H16 M8 15.5 H12.5"/></svg>',
+  publicar: '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5 V19 M5 12 H19"/></svg>',
+  perfil: '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20 C5.5 15.5 8.5 14 12 14 C15.5 14 18.5 15.5 19.5 20"/></svg>',
+  soporte: '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M9.5 9.5 A2.5 2.5 0 1 1 12 13 V14.5"/><circle cx="12" cy="17.5" r="0.9" fill="currentColor" stroke="none"/></svg>'
+};
+
+// Espejo en código de public/images/materials/*.svg — mismo trazo, sin depender
+// de la red. `color` es el chip de material y `fg` el trazo del ícono encima.
+const svg = d => '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
+
+const MATERIALS = {
+  carton: { label: "Cartón", color: "#e8b53a", fg: "#16281f", icon: svg('<path d="M12 4.2 L20.3 8.1 V16 L12 19.9 L3.7 16 V8.1 Z"/><path d="M3.7 8.1 L12 12 L20.3 8.1"/><path d="M12 12 V19.9"/><path d="M7.8 6.15 L16.2 10.05"/>') },
+  papel: { label: "Papel", color: "#c98f3c", fg: "#16281f", icon: svg('<path d="M6.2 3.6 H13.8 L18.4 8.2 V20.4 H6.2 Z"/><path d="M13.8 3.6 V8.2 H18.4"/><path d="M9 12.6 H15.4"/><path d="M9 16 H13.2"/>') },
+  pet: { label: "Plástico PET", color: "#4c7a2f", fg: "#ffffff", icon: svg('<path d="M10 3.6 H14 V5.8 C14 7.1 16 7.9 16 11 V18.8 A1.6 1.6 0 0 1 14.4 20.4 H9.6 A1.6 1.6 0 0 1 8 18.8 V11 C8 7.9 10 7.1 10 5.8 Z"/><path d="M8 12.8 H16"/><path d="M8 15.2 H16"/>') },
+  vidrio: { label: "Vidrio", color: "#5b7f9e", fg: "#ffffff", icon: svg('<path d="M9 3.6 H15 V7.2 L17 10.2 V18.8 A1.6 1.6 0 0 1 15.4 20.4 H8.6 A1.6 1.6 0 0 1 7 18.8 V10.2 L9 7.2 Z"/><path d="M7 12.6 H17"/>') },
+  metal: { label: "Metal", color: "#b1573f", fg: "#ffffff", icon: svg('<ellipse cx="12" cy="5.8" rx="4.8" ry="2.2"/><path d="M7.2 5.8 V18.2 A4.8 2.2 0 0 0 16.8 18.2 V5.8"/><path d="M7.2 9.6 H16.8"/>') },
+  electronicos: { label: "Electrónicos", color: "#6b5b95", fg: "#ffffff", icon: svg('<rect x="7.2" y="7.2" width="9.6" height="9.6" rx="1.6"/><rect x="10.2" y="10.2" width="3.6" height="3.6" rx="0.6"/><path d="M9.8 7.2 V4.2 M14.2 7.2 V4.2 M9.8 16.8 V19.8 M14.2 16.8 V19.8 M7.2 9.8 H4.2 M7.2 14.2 H4.2 M16.8 9.8 H19.8 M16.8 14.2 H19.8"/>') },
+  organico: { label: "Orgánico", color: "#7a8f3f", fg: "#ffffff", icon: svg('<path d="M4.6 19.4 C4.6 11.4 10.8 5.2 19.4 4.6 C19.4 13 13 19.4 4.6 19.4 Z"/><path d="M4.6 19.4 C8.4 15.2 12.6 12.2 16.8 10.2"/>') }
+};
+
+const HEADERS = {
+  mapa: ["Materiales disponibles", "14 anuncios activos · radio 5 km · San Isidro"],
+  recojos: ["Mis recojos", "2 activos · 30 completados este mes"],
+  chats: ["Mensajes", "3 conversaciones abiertas"],
+  publicar: ["Anunciar material", "Publica en menos de un minuto"],
+  publicaciones: ["Mis publicaciones", "3 activos · 12 completados este mes"],
+  perfil: ["Mi perfil", "Reciclador verificado · Lima Centro"],
+  soporte: ["Soporte", "Respuesta promedio 12 min · llamada 24/7"]
+};
+
+// a1 y a2 nacen reclamados: son las dos paradas que ya aparecen en la ruta
+// activa y en Mis recojos.
+const ADS = [
+  { id: "a1", kg: "24 kg", mat: "carton", material: "Cartón plegado", place: "Minimarket H&J · Av. Pershing 345, Magdalena", dist: "1,2 KM", eta: "~9 MIN", window: "HOY 14:00–18:00" },
+  { id: "a2", kg: "8,5 kg", mat: "pet", material: "Botellas PET", place: "Bodega Olivo · Jr. Cuba 195, San Isidro", dist: "2,4 KM", eta: "~15 MIN", window: "MAÑ 09:00" },
+  { id: "a3", kg: "31 kg", mat: "vidrio", material: "Vidrio mixto", place: "Rest. La Huerta · Av. Arenales 1200, Lince", dist: "3,9 KM", eta: "~22 MIN", window: "HOY 19:00" },
+  { id: "a4", kg: "6 kg", mat: "metal", material: "Latas de aluminio", place: "Café Arenales · Av. Petit Thouars 2100, Lince", dist: "4,3 KM", eta: "~26 MIN", window: "MAÑ 11:00" }
+];
+
+// Orden de los chips de material en Publicar.
+const MAT_ORDER = ["carton", "papel", "pet", "vidrio", "metal", "electronicos"];
+
+// Pestañas que solo existen en un rol. Sirven para deducir el rol inicial a
+// partir de `defaultTab`: sin esto, defaultTab "publicar" caía al mapa porque
+// esa pestaña no está en la navegación del reciclador.
+const TAB_ROLE = { mapa: "reciclador", recojos: "reciclador", publicar: "generador", publicaciones: "generador" };
+
+const THREADS = [
+  { id: "t1", name: "Juan Flores", initials: "JF", time: "14:02", preview: "Te dejo las cajas en la puerta lateral.", tag: "24 KG · CARTÓN" },
+  { id: "t2", name: "Camila Salazar", initials: "CS", time: "11:40", preview: "Mañana a las 9 está perfecto.", tag: "8,5 KG · PET" },
+  { id: "t3", name: "Emilia Valencia", initials: "EV", time: "Ayer", preview: "Gracias por la puntualidad.", tag: "COMPLETADO" }
+];
+
+const CONVOS = {
+  t1: [
+    { from: "them", text: "Hola Marco, ya reclamaste el cartón. ¿A qué hora pasas?", time: "13:48" },
+    { from: "me", text: "Buenas tardes. Estoy llegando a las 14:35 aprox.", time: "13:52" },
+    { from: "them", text: "Perfecto. Te dejo las cajas en la puerta lateral, toca el timbre 2.", time: "14:02" }
+  ],
+  t2: [
+    { from: "them", text: "Las botellas están listas, son unas 8 kilos.", time: "11:20" },
+    { from: "me", text: "Genial. ¿Te parece mañana a las 9?", time: "11:32" },
+    { from: "them", text: "Mañana a las 9 está perfecto.", time: "11:40" }
+  ],
+  t3: [
+    { from: "them", text: "Gracias por la puntualidad, te dejé 5 estrellas.", time: "Ayer 18:10" },
+    { from: "me", text: "Gracias a ti, nos vemos la próxima semana.", time: "Ayer 18:22" }
+  ]
+};
+
+const FAQ_DATA = [
+  { q: "¿Cómo reclamo un material del mapa?", a: "Abre el anuncio desde el mapa o la lista y pulsa Reclamar. El material queda reservado para ti y el generador recibe un aviso en su chat. Si ya tienes otras paradas, la ruta se recalcula para incluir la nueva." },
+  { q: "¿Qué pasa si el generador no está cuando llego?", a: "Escríbele por el chat y espera hasta 15 minutos. Si no responde, marca el recojo como no concretado desde Mis recojos; el caso queda registrado y no afecta tu cumplimiento." },
+  { q: "¿Cómo funciona la confirmación por QR?", a: "Al llegar, el generador muestra su código en la app y tú lo escaneas desde la entrega en curso. Con el escaneo se registra el peso final y se habilita la valoración mutua." },
+  { q: "¿Cómo sé quién va a recoger mi material?", a: "Cuando un reciclador reclama tu anuncio, la publicación pasa a Reclamado en Mis publicaciones y se abre un chat con él. Ahí acuerdan la hora exacta, y antes de que llegue puedes ver su valoración y si está verificado." },
+  { q: "¿Cuándo debo llamar a soporte?", a: "Usa la llamada 24/7 solo para situaciones extremas: riesgo de seguridad, suplantación de identidad o incumplimientos graves. Los demás casos se resuelven más rápido con un reporte escrito." }
+];
+
+class Component extends DCLogic {
+  state = {
+    tab: null, role: null,
+    filters: { "Cerca de mí": true },
+    claimed: { a1: true, a2: true }, // anuncios reclamados (ids de ADS)
+    thread: "t1", draft: "", extra: {},
+    scannerOpen: false, rateOpen: false, rating: 0,
+    materials: { carton: true }, qty: "24",
+    faqOpen: { 0: true }
+  };
+
+  tab() { return this.state.tab || this.props.defaultTab || "mapa"; }
+
+  // Rol explícito si el usuario ya lo cambió; si no, el que corresponda al tab.
+  role() { return this.state.role || TAB_ROLE[this.tab()] || "reciclador"; }
+
+  chip(label, on, activeBg, activeFg) {
+    return {
+      label,
+      bg: on ? (activeBg || "#16281f") : "#ffffff",
+      fg: on ? (activeFg || "#ffffff") : "#3d4a3f",
+      border: on ? (activeBg || "#16281f") : "#d8dcd2"
+    };
+  }
+
+  renderVals() {
+    const tab = this.tab();
+    const isGen = this.role() === "generador";
+    const keys = isGen
+      ? ["publicar", "publicaciones", "chats", "perfil", "soporte"]
+      : ["mapa", "recojos", "chats", "perfil", "soporte"];
+    const labels = { mapa: "MAPA", recojos: "RECOJOS", chats: "CHATS", publicar: "PUBLICAR", publicaciones: "ANUNCIOS", perfil: "PERFIL", soporte: "SOPORTE" };
+    const active = keys.indexOf(tab) === -1 ? keys[0] : tab;
+
+    const navItems = keys.map(k => ({
+      label: labels[k],
+      icon: { __html: ICONS[k] },
+      bg: active === k ? "#26402f" : "transparent",
+      color: active === k ? "#a3d24a" : "#8fa392",
+      go: () => this.setState({ tab: k })
+    }));
+
+    // El anuncio destacado es el primero que todavía se puede reclamar.
+    const featuredId = (ADS.filter(a => !this.state.claimed[a.id])[0] || {}).id;
+    const ads = ADS.map(a => {
+      const claimed = !!this.state.claimed[a.id];
+      const featured = a.id === featuredId;
+      const mat = MATERIALS[a.mat];
+      return Object.assign({}, a, {
+        color: mat.color,
+        iconFg: mat.fg,
+        icon: { __html: mat.icon },
+        cardBorder: claimed ? "#4c7a2f" : featured ? "#16281f" : "#e2e5dc",
+        cardShadow: featured ? "0 2px 0 #16281f" : "none",
+        btnLabel: claimed ? "Reclamado" : "Reclamar",
+        btnBg: claimed ? "#eef2e4" : featured ? "#a3d24a" : "#ffffff",
+        btnFg: claimed ? "#3f6224" : "#16281f",
+        btnBorder: claimed ? "#eef2e4" : featured ? "#a3d24a" : "#16281f",
+        claim: claimed ? () => {} : () => this.setState(s => ({ claimed: Object.assign({}, s.claimed, { [a.id]: true }) }))
+      });
+    });
+
+    const pickupRows = [
+      { kg: "24 kg", material: "Cartón plegado", place: "Minimarket H&J · Magdalena", person: "Juan Flores", window: "HOY 14:00–18:00", state: "En camino", stateBg: "#eef2e4", stateFg: "#3f6224" },
+      { kg: "8,5 kg", material: "Botellas PET", place: "Bodega Olivo · San Isidro", person: "Camila Salazar", window: "MAÑ 09:00", state: "Confirmado", stateBg: "#eceee7", stateFg: "#5d6b5f" },
+      { kg: "9 kg", material: "Bolsas de plástico", place: "Casa · Jesús María", person: "Emilia Valencia", window: "AYER 17:00", state: "Completado", stateBg: "#eef2e4", stateFg: "#3f6224" },
+      { kg: "14 kg", material: "Vidrio mixto", place: "Rest. La Huerta · Lince", person: "Camila Salazar", window: "HACE 2 D", state: "Completado", stateBg: "#eef2e4", stateFg: "#3f6224" }
+    ];
+
+    // El espejo de pickupRows en la vista del generador: lo que publicó y quién
+    // lo recoge. `personFg` apaga el texto cuando nadie lo reclamó todavía.
+    const publicationRows = [
+      { kg: "30 kg", material: "Cartón plegado", posted: "Publicado hace 2 h", person: "Marco Quispe", personFg: "#3d4a3f", window: "HOY 14:00–18:00", state: "En camino", stateBg: "#eef2e4", stateFg: "#3f6224" },
+      { kg: "12 kg", material: "Papel de oficina", posted: "Publicado hace 5 h", person: "Rosa Huamán", personFg: "#3d4a3f", window: "HOY 16:00–19:00", state: "Reclamado", stateBg: "#eceee7", stateFg: "#5d6b5f" },
+      { kg: "6 kg", material: "Botellas PET", posted: "Publicado ayer", person: "Sin reclamar", personFg: "#8b9186", window: "MAÑ 09:00", state: "Esperando", stateBg: "#fdf3dd", stateFg: "#8a6a1f" },
+      { kg: "18 kg", material: "Vidrio mixto", posted: "Publicado hace 3 d", person: "Luis Ttito", personFg: "#3d4a3f", window: "HACE 2 D", state: "Completado", stateBg: "#eef2e4", stateFg: "#3f6224" }
+    ];
+
+    const threads = THREADS.map(t => Object.assign({}, t, {
+      bg: this.state.thread === t.id ? "#f4f5f0" : "#ffffff",
+      select: () => this.setState({ thread: t.id })
+    }));
+    const activeThread = THREADS.filter(t => t.id === this.state.thread)[0] || THREADS[0];
+    const convo = (CONVOS[activeThread.id] || []).concat(this.state.extra[activeThread.id] || []);
+    const messages = convo.map(m => ({
+      text: m.text, time: m.time,
+      align: m.from === "me" ? "flex-end" : "flex-start",
+      bg: m.from === "me" ? "#16281f" : "#ffffff",
+      fg: m.from === "me" ? "#ffffff" : "#16281f",
+      border: m.from === "me" ? "#16281f" : "#e2e5dc",
+      metaFg: m.from === "me" ? "#8fa392" : "#8b9186"
+    }));
+
+    const send = () => {
+      const text = (this.state.draft || "").trim();
+      if (!text) return;
+      const id = activeThread.id;
+      this.setState(s => {
+        const prev = s.extra[id] || [];
+        return {
+          draft: "",
+          extra: Object.assign({}, s.extra, { [id]: prev.concat([{ from: "me", text, time: "ahora" }]) })
+        };
+      });
+    };
+
+    const matChips = MAT_ORDER.map(k =>
+      Object.assign(this.chip(MATERIALS[k].label, !!this.state.materials[k], "#a3d24a", "#16281f"), {
+        toggle: () => this.setState(s => ({ materials: Object.assign({}, s.materials, { [k]: !s.materials[k] }) }))
+      })
+    );
+    const pickedMats = MAT_ORDER.filter(k => this.state.materials[k]);
+    const previewMat = MATERIALS[pickedMats[0]] || MATERIALS.carton;
+
+
+    const filters = ["Cerca de mí", "Cartón", "Plástico", "+20 kg", "Hoy"].map(l =>
+      Object.assign(this.chip(l, !!this.state.filters[l]), {
+        toggle: () => this.setState(s => ({ filters: Object.assign({}, s.filters, { [l]: !s.filters[l] }) }))
+      })
+    );
+
+    const faqs = FAQ_DATA.map((f, i) => ({
+      q: f.q, a: f.a,
+      open: !!this.state.faqOpen[i],
+      sign: this.state.faqOpen[i] ? "−" : "+",
+      toggle: () => this.setState(s => ({ faqOpen: Object.assign({}, s.faqOpen, { [i]: !s.faqOpen[i] }) }))
+    }));
+
+    const stars = [1, 2, 3, 4, 5].map(n => ({
+      n: n,
+      bg: this.state.rating >= n ? "#a3d24a" : "#ffffff",
+      fg: "#16281f",
+      border: this.state.rating >= n ? "#a3d24a" : "#d8dcd2",
+      set: () => this.setState({ rating: n })
+    }));
+
+    return {
+      navItems,
+      pageTitle: HEADERS[active][0],
+      pageMeta: HEADERS[active][1],
+      statusLabel: isGen ? "3 ANUNCIOS ACTIVOS" : "2 RECOJOS ACTIVOS",
+      roleShort: isGen ? "GEN" : "REC",
+      toggleRole: () => this.setState({ role: isGen ? "reciclador" : "generador", tab: isGen ? "mapa" : "publicar" }),
+
+      isMapa: active === "mapa",
+      isRecojos: active === "recojos",
+      isChats: active === "chats",
+      isPublicar: active === "publicar",
+      isPublicaciones: active === "publicaciones",
+      isPerfil: active === "perfil",
+      isSoporte: active === "soporte",
+
+      goChats: () => this.setState({ tab: "chats" }),
+      goSoporte: () => this.setState({ tab: "soporte" }),
+
+      ads, filters,
+      routeKg: "32,5 kg",
+      routeMeta: "2 paradas · 6,1 km",
+      pickups: pickupRows,
+      publications: publicationRows,
+
+      threads, messages,
+      activeName: activeThread.name,
+      activeInitials: activeThread.initials,
+      activeSub: activeThread.tag,
+      draft: this.state.draft,
+      onDraft: e => this.setState({ draft: e.target.value }),
+      onDraftKey: e => { if (e.key === "Enter") send(); },
+      send,
+
+      matChips,
+      qty: this.state.qty,
+      onQty: e => this.setState({ qty: e.target.value.replace(/[^\d.,]/g, "").slice(0, 5) }),
+      qty5: () => this.setState({ qty: "5" }),
+      qty10: () => this.setState({ qty: "10" }),
+      qty25: () => this.setState({ qty: "25" }),
+      previewKg: (this.state.qty || "—") + " kg",
+      previewMat: pickedMats.length ? pickedMats.map(k => MATERIALS[k].label).join(", ") : "Selecciona material",
+      previewColor: pickedMats.length ? previewMat.color : "#eceee7",
+      previewIconFg: pickedMats.length ? previewMat.fg : "#a8b2a2",
+      previewIcon: { __html: previewMat.icon },
+      publishHint: pickedMats.length ? "Visible para 14 recicladores cerca" : "Elige al menos un material",
+      publish: () => this.setState({ tab: "publicaciones" }),
+
+      faqs, stars,
+      scannerOpen: this.state.scannerOpen,
+      rateOpen: this.state.rateOpen,
+      openScanner: () => this.setState({ scannerOpen: true }),
+      closeScanner: () => this.setState({ scannerOpen: false }),
+      // La valoración arranca en cero cada vez, si no reaparece la anterior.
+      confirmDelivery: () => this.setState({ scannerOpen: false, rateOpen: true, rating: 0 }),
+      closeRate: () => this.setState({ rateOpen: false, rating: 0 })
+    };
+  }
+}
+</script>
+</body>
+</html>

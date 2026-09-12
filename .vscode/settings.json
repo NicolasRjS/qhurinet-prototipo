@@ -1,0 +1,20 @@
+{
+  // Los artboards .dc.html usan interpolación `{{ expr }}` dentro de atributos
+  // `style`. El validador CSS de VS Code no conoce esa sintaxis y la reporta
+  // como "at-rule or selector expected" / "property value expected".
+  // Son falsos positivos: el runtime resuelve las expresiones antes de pintar.
+  "html.validate.styles": false,
+
+  "files.associations": {
+    "*.dc.html": "html"
+  },
+  "emmet.includeLanguages": {
+    "html": "html"
+  },
+  "[html]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true
+  },
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true
+}
