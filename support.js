@@ -155,9 +155,19 @@
         rawHtml = payload && payload.__html;
         continue;
       }
+      // Evita que el parser SVG intente interpretar {{ ... }} antes del arranque.
+      if (name === "data-svg-points") {
+        el.setAttribute("points", interpolate(raw, scope));
+        continue;
+      }
 
       if (name === "style-hover") {
         hover(el, parseStyle(interpolate(raw, scope)));
+        continue;
+      }
+
+      if (name === "disabled" || name === "checked" || name === "selected") {
+        if (evaluate(raw, scope)) el.setAttribute(name, "");
         continue;
       }
 
@@ -179,6 +189,7 @@
     }
 
     renderChildren(template, scope, el);
+    if (template.localName === "select" && template.hasAttribute("value")) el.value = interpolate(template.getAttribute("value"), scope);
     return el;
   }
 
@@ -362,7 +373,7 @@
       if (instance.routeParams) {
         var mapParams = instance.routeParams();
         for (var key in mapParams) {
-          if (tab === "mapa" && mapParams[key]) query.set(key, mapParams[key]);
+          if (mapParams[key]) query.set(key, mapParams[key]);
           else query.delete(key);
         }
       }
@@ -401,6 +412,7 @@
       if (mapList) mapList.scrollTop = listScroll;
       syncUrl(!painted);
       painted = true;
+      if (instance.afterRender) instance.afterRender(mount);
     }
 
     // Agrupa varios setState del mismo clic en un solo repintado.

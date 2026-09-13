@@ -26,6 +26,7 @@ qhurinet-html/
 ├─ index.html            ← la maqueta completa (todas las pantallas)
 ├─ support.js            ← runtime para abrirla en el navegador
 ├─ public/images/        ← biblioteca de assets (ver su README)
+├─ tests/flows.test.cjs   ← pruebas de lógica sin dependencias
 └─ .vscode/settings.json ← silencia los falsos positivos del validador CSS
 ```
 
@@ -122,21 +123,22 @@ Todo vive en el `<script type="text/x-dc">` del final, en una clase
 `Component extends DCLogic`:
 
 - **Los datos de muestra** están en constantes al inicio: `ADS`, `RECYCLING_POINTS`, `POINT_TYPES`, `THREADS`,
-  `CONVOS`, `FAQ_DATA`, `HEADERS`. Ahí se cambia el contenido de la maqueta.
+  `CONVOS`, `FAQ_DATA`, `HEADERS`, `PICKUPS`, `PUBLICATIONS`, `SAVED_ROUTES` y
+  `ROUTE_LOCATIONS`. Ahí se cambia el contenido de la maqueta.
 - `state` — lo único que se mueve al hacer clic: qué anuncios están
   `claimed`, qué hilo de chat está abierto, qué chips de material y filtros
   están marcados, y si hay un modal en pantalla.
 - `tab()` / `role()` — pestaña y rol visibles. El rol es explícito solo si se
   tocó el botón MODO; si no, se deduce de la pestaña.
-- `renderVals()` — devuelve **todo** lo que el marcado interpola. Si un
-  `{{ x }}` aparece en el marcado, `renderVals()` lo devuelve; no hay estado
-  escondido.
+- `renderVals()` — devuelve los valores y acciones que interpola el marcado.
+- `afterRender()` — mantiene el foco de los diálogos y el temporizador del
+  seguimiento. La animación actualiza solo posición, ETA y estado, sin repintar
+  el resto de la página ni interrumpir los campos de texto.
 
-La ruta parte de `32,5 kg · 2 paradas · 6,1 km`. Agregar un punto fijo incorpora
-una parada, una sola vez, sin sumarle kilos. Al añadir puntos se sustituye el
-kilometraje de muestra por el número de puntos: no se calcula una ruta real.
-Reclamar otro anuncio mantiene el comportamiento previo; las tablas de Recojos,
-Anuncios y Perfil siguen siendo fijas.
+La ruta parte de los anuncios `a1` y `a2` (32,5 kg). Agregar un punto fijo
+incorpora una parada sin sumarle kilos; reclamar otro anuncio también lo añade
+al recorrido. El orden, los números de los pines, el trazo, los kilos, los
+kilómetros y los minutos se calculan a partir de la misma lista de paradas.
 
 ## Puntos de reciclaje y estados del mapa
 
@@ -171,8 +173,75 @@ con Atrás/Adelante. `role=reciclador` es opcional en la pestaña exclusiva `map
 Parámetros: `view=anuncios|puntos`, `point=p1`…`p8`,
 `material=carton|pet|vidrio|metal|plastico`, `type=acopio|bodega|reciclador|municipal`,
 `q=texto`, `hidden=tipos,separados,por,comas`, `near=1`, `heavy=1`, `today=1`.
-Los parámetros desconocidos de estas opciones se ignoran. Las paradas agregadas
-solo duran durante la sesión de la página; no se guardan en la URL.
+Los parámetros desconocidos de estas opciones se ignoran. La ruta activa
+también se conserva en la URL mediante `stops`.
+
+## Rutas, seguimiento y acciones de las recolecciones
+
+**Optimizar ruta** ordena todas las paradas seleccionadas por vecino más cercano
+desde la posición «TÚ». Si la heurística no mejora la distancia, conserva el
+recorrido original. Los cálculos usan coordenadas relativas: cada unidad
+representa 80 m, la velocidad media es de 15 km/h y se agregan 3 min por parada.
+El recorrido termina en la última parada, sin retorno al origen. Son cifras
+simuladas; no hay geolocalización ni servicio de mapas.
+
+**Guardar ruta** solicita un nombre y una descripción opcional. Guarda una copia
+del orden actual. **Rutas guardadas** incluye tres ejemplos (Centro, Costa y Sur),
+permite cargar una ruta completa y eliminarla de la lista. Eliminar una ruta
+guardada no borra la ruta activa. Las rutas creadas o eliminadas vuelven al estado
+de muestra al recargar; las paradas de la ruta activa se recuperan desde el enlace.
+
+Cada fila de **Recojos** (`r1`…`r4`) y **Anuncios** (`g1`…`g4`) tiene un menú «⋯»:
+reprogramar con fecha y franja, cancelar con un motivo obligatorio y alternar
+prioridad. La fila muestra el nuevo estado, horario, motivo y distintivo según
+corresponda. Las filas completadas o canceladas conservan su historial y no
+admiten reprogramación ni otra cancelación. Cancelar o completar un recojo retira
+su parada asociada de la ruta; los contadores de activos y cancelados se actualizan.
+Los dos roles mantienen sus conjuntos de datos de muestra independientes.
+
+El generador puede **Seguir recolector** desde la fila `g1`, en camino, y desde su
+chat. La posición avanza, disminuye la llegada estimada y al alcanzar el destino
+se muestra «El recolector llegó a tu dirección». La demostración dura 60 segundos
+desde el progreso cero. Cerrar la vista detiene su temporizador. No se completa
+la recolección automáticamente al llegar.
+
+**Abrir chat** conserva el rol de origen y la entrega seleccionada. Cada botón QR
+abre la entrega de su fila. El escáner acepta su código de muestra (`QH-R1`,
+`QH-R2`, etc.) y rechaza códigos de otras entregas. Confirmar por QR simulado o
+por código completa esa fila y muestra su peso y contraparte en la valoración.
+
+| Estado | Enlace de demostración |
+| --- | --- |
+| Ruta por optimizar | [Cinco paradas](https://nicolasrjs.github.io/qhurinet-prototipo/?defaultTab=mapa&stops=a1,a2,p8,p1,p7) |
+| Ruta optimizada | [Orden y resumen recalculados](https://nicolasrjs.github.io/qhurinet-prototipo/?defaultTab=mapa&stops=a1,a2,p8,p1,p7&opt=1) |
+| Guardar ruta | [Diálogo de guardado](https://nicolasrjs.github.io/qhurinet-prototipo/?defaultTab=mapa&stops=a1,a2,p1&dialog=guardar) |
+| Rutas guardadas | [Panel con ejemplos](https://nicolasrjs.github.io/qhurinet-prototipo/?defaultTab=mapa&panel=rutas) |
+| Ruta de ejemplo cargada | [Circuito de la costa](https://nicolasrjs.github.io/qhurinet-prototipo/?defaultTab=mapa&route=costa) |
+| Seguimiento desde Anuncios | [Recolector en camino](https://nicolasrjs.github.io/qhurinet-prototipo/?defaultTab=publicaciones&track=g1) |
+| Seguimiento desde Chats | [Chat del generador](https://nicolasrjs.github.io/qhurinet-prototipo/?role=generador&defaultTab=chats&thread=t1&chatRow=g1&track=g1&progress=50) |
+| Recolector en destino | [Llegada simulada](https://nicolasrjs.github.io/qhurinet-prototipo/?defaultTab=publicaciones&track=g1&progress=100) |
+| Menú de Recojos | [Acciones de r2](https://nicolasrjs.github.io/qhurinet-prototipo/?defaultTab=recojos&menu=r2) |
+| Menú de Anuncios | [Acciones de g2](https://nicolasrjs.github.io/qhurinet-prototipo/?defaultTab=publicaciones&menu=g2) |
+| Reprogramar recojo | [Nueva fecha y franja](https://nicolasrjs.github.io/qhurinet-prototipo/?defaultTab=recojos&dialog=reprogramar&row=r2) |
+| Cancelar anuncio | [Confirmación y motivo](https://nicolasrjs.github.io/qhurinet-prototipo/?defaultTab=publicaciones&dialog=cancelar&row=g2) |
+| Fila prioritaria | [Prioridad en Anuncios](https://nicolasrjs.github.io/qhurinet-prototipo/?defaultTab=publicaciones&priority=g1) |
+| Escáner por entrega | [Bodega Olivo y código manual](https://nicolasrjs.github.io/qhurinet-prototipo/?defaultTab=recojos&dialog=qr&row=r2) |
+
+Los parámetros adicionales son `stops=a1,a2,p1` (`none` para vaciar), `opt=1`,
+`route=centro|costa|sur`, `panel=rutas`, `dialog=guardar|reprogramar|cancelar|qr`,
+`row=r1|…|r4|g1|…|g4`, `menu=id`, `priority=ids,separados,por,comas`, `thread=t1|t2|t3`,
+`chatRow=id`, `track=g1`, `progress=0…100`. `date=AAAA-MM-DD` y `slot=14:00–18:00`
+permiten precargar el diálogo de reprogramación. `updates` guarda en JSON los
+cambios confirmados por fila (estado, fecha/franja y motivo); se valida al leerlo
+y `URLSearchParams` lo codifica. Para compartir una cancelación o reprogramación
+ya confirmada, basta copiar la URL que genera la interfaz. Atrás/Adelante restaura
+estos estados. Los códigos manuales y los borradores de los diálogos no se guardan.
+
+## Pruebas
+
+Ejecutar `node --test tests/flows.test.cjs` comprueba cálculos de ruta, optimización,
+guardado, aislamiento de filas, validación, códigos por entrega, roles y estados
+de URL. Utiliza exclusivamente módulos incluidos en Node.js.
 
 ## Assets
 
@@ -203,12 +272,14 @@ Nada de esto es un defecto pendiente: es trabajo que le corresponde a Angular y
 Spring Boot, y por eso aquí queda solo insinuado.
 
 - Las pestañas de estado en Recojos y Anuncios **marcan pero no filtran**.
-- Los pesos y distancias de ruta, resumen del mes, historial y valoraciones son de muestra.
+- Los pesos de origen, resumen del mes, historial y valoraciones son de muestra;
+  las métricas de ruta se calculan sobre las coordenadas simuladas.
 - No hay mapa real, ni escáner de QR, ni llamada, ni envío de formularios: el
-  escáner es un dibujo y "Confirmar entrega" solo abre el modal de valoración.
-- No hay validación de campos ni mensajes de error.
-- Al recargar solo se recuperan la navegación y los filtros/detalle del mapa
-  indicados en la URL. Reclamos, chats y puntos agregados a ruta se reinician.
+  escáner es un dibujo y la confirmación cambia el estado local de la entrega.
+- El formulario de publicación mantiene sus limitaciones originales; los nuevos
+  diálogos sí validan nombre, fecha, franja, motivo y código de entrega.
+- Al recargar se recuperan los estados representados en la URL. Los mensajes,
+  reclamos y la colección de rutas creadas por el usuario se reinician.
 - Los controles anteriores usan `<div onClick>` y no reciben foco por teclado.
   Los nuevos controles del mapa usan botones con estado accesible.
 

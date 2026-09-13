@@ -31,6 +31,17 @@
   .point-reciclador { border-radius: 50%; background: #b1573f; color: #ffffff; }
   .point-municipal { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); background: #5b7f9e; color: #ffffff; }
   .material-tag { font-size: 11px; border: 1px solid #d9e3c3; border-radius: 20px; padding: 4px 9px; background: #eef2e4; color: #3f6224; }
+  .flow-button { font-family: inherit; font-size: 12px; font-weight: 600; color: #16281f; background: #ffffff; border: 1px solid #d8dcd2; border-radius: 8px; padding: 9px 12px; cursor: pointer; }
+  .flow-button:focus-visible, .flow-field:focus-visible { outline: 2px solid #4c7a2f; outline-offset: 2px; }
+  .flow-button:disabled { opacity: .45; cursor: default; }
+  .flow-primary { background: #a3d24a; border-color: #a3d24a; }
+  .flow-danger { color: #b1573f; border-color: #b1573f; }
+  .flow-field { width: 100%; margin-top: 7px; padding: 11px 12px; font: inherit; font-size: 13px; color: #16281f; background: #f4f5f0; border: 1px solid #e2e5dc; border-radius: 8px; }
+  .flow-overlay { position: fixed; inset: 0; z-index: 60; background: rgba(22,40,31,.62); display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .flow-dialog { width: 440px; max-height: calc(100vh - 48px); overflow-y: auto; background: #ffffff; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 18px; }
+  .flow-heading { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #6c7a6e; letter-spacing: .06em; }
+  .flow-side { position: absolute; z-index: 6; right: 0; top: 0; bottom: 0; width: 320px; background: #ffffff; border-left: 1px solid #e2e5dc; padding: 20px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; }
+  .stop-number { position: absolute; right: -7px; top: -9px; width: 19px; height: 19px; border: 2px solid #ffffff; border-radius: 50%; background: #16281f; color: #ffffff; font: 10px 'IBM Plex Mono', monospace; display: flex; align-items: center; justify-content: center; }
 </style>
 </helmet>
 <div style="font-family: 'IBM Plex Sans', Helvetica, sans-serif; color: #16281f; background: #f4f5f0; min-height: 100vh; display: flex; min-width: 1240px;">
@@ -171,26 +182,29 @@
             <rect x="660" y="520" width="300" height="140" rx="6" fill="#d5e0cb"></rect>
             <path d="M0 240 H1000 M0 500 H1000 M240 0 V700 M640 0 V700" stroke="#ffffff" stroke-width="14"></path>
             <path d="M0 130 H1000 M0 380 H1000 M440 0 V700 M840 0 V700" stroke="#f3f5ef" stroke-width="8"></path>
-            <polyline points="240,500 240,380 440,380 440,240 640,240" fill="none" stroke="#16281f" stroke-width="9" stroke-linecap="round"></polyline>
-            <polyline points="240,500 240,380 440,380 440,240 640,240" fill="none" stroke="#a3d24a" stroke-width="5" stroke-linecap="round"></polyline>
           </svg>
 
-          <div style="position: absolute; left: 18px; top: 18px; display: flex; gap: 8px;">
-            <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 8px; padding: 8px 14px; font-size: 12px; font-weight: 600; cursor: pointer;">Optimizar ruta</div>
-            <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 8px; padding: 8px 14px; font-size: 12px; color: #3d4a3f; cursor: pointer;">Rutas guardadas</div>
+          <div style="position: absolute; left: 18px; right: 348px; top: 18px; display: flex; gap: 6px; flex-wrap: wrap;">
+            <button type="button" class="flow-button" onClick="{{ optimizeRoute }}" aria-pressed="{{ optimized }}" style="font-size: 11px; padding: 8px;">Optimizar ruta</button>
+            <button type="button" class="flow-button" onClick="{{ openSave }}" style="font-size: 11px; padding: 8px;">Guardar ruta</button>
+            <button type="button" class="flow-button" onClick="{{ openSaved }}" style="font-size: 11px; padding: 8px;">Rutas guardadas</button>
           </div>
 
           <div aria-label="Pines del mapa" style="position: absolute; top: 64px; right: 348px; bottom: 175px; left: 0;">
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Trazo de la ruta activa" style="position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none;">
+              <polyline data-route-trace="true" data-svg-points="{{ routeTrace }}" fill="none" stroke="#16281f" stroke-width="8" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"></polyline>
+              <polyline data-svg-points="{{ routeTrace }}" fill="none" stroke="#a3d24a" stroke-width="4" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"></polyline>
+            </svg>
             <div style="position: absolute; left: 12%; top: 92%; transform: translate(-50%, -50%); font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #16281f;">● TÚ</div>
             <sc-for list="{{ adPins }}" as="a">
               <button type="button" class="map-button" data-ad-pin="{{ a.id }}" onClick="{{ a.show }}" title="{{ a.pinLabel }}" aria-label="{{ a.pinLabel }}" style="position: absolute; left: {{ a.x }}%; top: {{ a.y }}%; transform: translate(-50%, -50%); background: #ffffff; border: 1px solid {{ a.cardBorder }}; border-radius: 10px; padding: 7px 9px; display: flex; align-items: center; gap: 6px; box-shadow: {{ a.cardShadow }};">
                 <span style="width: 18px; height: 18px; color: {{ a.color }};" dangerouslySetInnerHTML="{{ a.icon }}"></span>
-                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600;">{{ a.kg }}</span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600;">{{ a.kg }}</span><sc-if value="{{ a.stopNumber }}"><span class="stop-number">{{ a.stopNumber }}</span></sc-if>
               </button>
             </sc-for>
             <sc-for list="{{ pointPins }}" as="p">
               <button type="button" class="map-button" data-point-pin="{{ p.id }}" data-point-type="{{ p.type }}" title="{{ p.pinLabel }}" aria-label="{{ p.pinLabel }}" onClick="{{ p.open }}" style="position: absolute; left: {{ p.x }}%; top: {{ p.y }}%; transform: translate(-50%, -50%); padding: 4px; background: #ffffff; border: 1px solid {{ p.cardBorder }}; border-radius: 8px;">
-                <span class="point-symbol point-{{ p.type }}"><span style="width: 16px; height: 16px;" dangerouslySetInnerHTML="{{ p.icon }}"></span></span>
+                <span class="point-symbol point-{{ p.type }}"><span style="width: 16px; height: 16px;" dangerouslySetInnerHTML="{{ p.icon }}"></span></span><sc-if value="{{ p.stopNumber }}"><span class="stop-number">{{ p.stopNumber }}</span></sc-if>
               </button>
             </sc-for>
           </div>
@@ -204,39 +218,28 @@
               </div>
             </div>
             <div style="padding: 16px 18px; display: flex; flex-direction: column; gap: 14px;">
-              <div style="display: flex; gap: 12px;">
-                <div style="display: flex; flex-direction: column; align-items: center; padding-top: 4px;">
-                  <div style="width: 10px; height: 10px; border-radius: 50%; background: #a3d24a;"></div>
-                  <div style="width: 2px; flex: 1; background: #e2e5dc; min-height: 34px;"></div>
-                  <div style="width: 10px; height: 10px; border-radius: 50%; border: 2px solid #c3cbbc;"></div>
-                </div>
-                <div style="flex: 1; display: flex; flex-direction: column; gap: 18px;">
-                  <div>
-                    <div style="font-size: 13px; font-weight: 600;">Minimarket H&amp;J</div>
-                    <div style="font-size: 11px; color: #5d6b5f; margin-top: 2px;">Juan Flores · llega 14:35</div>
-                  </div>
-                  <div>
-                    <div style="font-size: 13px; font-weight: 600; color: #3d4a3f;">Bodega Olivo</div>
-                    <div style="font-size: 11px; color: #5d6b5f; margin-top: 2px;">Camila Salazar · llega 15:05</div>
-                  </div>
-                </div>
-              </div>
-              <sc-for list="{{ routePoints }}" as="p">
-                <div data-route-point="{{ p.id }}" style="border-top: 1px solid #eceee7; padding-top: 10px;">
-                  <button type="button" class="map-button" onClick="{{ p.open }}" style="border: none; padding: 0; background: transparent; text-align: left; font-size: 13px; font-weight: 600;">{{ p.name }}</button>
-                  <div style="font-size: 11px; color: #5d6b5f; margin-top: 3px;">{{ p.typeLabel }} · {{ p.district }}</div>
+              <div style="display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 13px;"><span data-route-distance="true">{{ routeDistance }}</span><span data-route-minutes="true">{{ routeMinutes }} min</span></div>
+              <sc-if value="{{ routeNotice }}"><div role="status" style="font-size: 11px; color: #4c7a2f; line-height: 1.5;">{{ routeNotice }}</div></sc-if>
+              <sc-if value="{{ routeEmpty }}"><div style="font-size: 12px; color: #5d6b5f;">Tu ruta no tiene paradas. Agrega un punto o reclama un anuncio.</div></sc-if>
+              <sc-for list="{{ routeStops }}" as="p">
+                <div data-route-stop="{{ p.id }}" style="display: flex; align-items: center; gap: 9px; border-top: 1px solid #eceee7; padding-top: 10px;">
+                  <span style="background: #eef2e4; border-radius: 50%; width: 22px; height: 22px; flex: none; text-align: center; padding-top: 4px; font: 11px 'IBM Plex Mono', monospace;">{{ p.number }}</span>
+                  <div style="flex: 1;"><button type="button" class="map-button" onClick="{{ p.open }}" style="border: none; padding: 0; background: transparent; text-align: left; font-size: 13px; font-weight: 600;">{{ p.name }}</button><div style="font-size: 11px; color: #5d6b5f; margin-top: 3px;">{{ p.detail }}</div></div>
+                  <button type="button" class="flow-button" aria-label="Quitar parada {{ p.name }}" onClick="{{ p.remove }}" style="padding: 3px 6px;">×</button>
                 </div>
               </sc-for>
               <div style="height: 1px; background: #eceee7;"></div>
+              <sc-if value="{{ routeCanScan }}">
               <div style="display: flex; gap: 8px;">
                 <div onClick="{{ openScanner }}" style="flex: 1; background: #16281f; color: #ffffff; font-size: 13px; font-weight: 600; text-align: center; padding: 11px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
                   <svg viewBox="0 0 24 24" style="width: 16px; height: 16px;"><rect x="4" y="4" width="6" height="6" fill="none" stroke="currentColor" stroke-width="2"></rect><rect x="14" y="4" width="6" height="6" fill="none" stroke="currentColor" stroke-width="2"></rect><rect x="4" y="14" width="6" height="6" fill="none" stroke="currentColor" stroke-width="2"></rect><path d="M14 14 H20 V20 H14 Z" fill="none" stroke="currentColor" stroke-width="2"></path></svg>
                   Escanear QR
                 </div>
-                <div onClick="{{ goChats }}" title="Abrir chat" style="border: 1px solid #d8dcd2; padding: 11px 14px; border-radius: 8px; cursor: pointer; display: flex; align-items: center;">
+                <div onClick="{{ routeChat }}" title="Abrir chat" style="border: 1px solid #d8dcd2; padding: 11px 14px; border-radius: 8px; cursor: pointer; display: flex; align-items: center;">
                   <svg viewBox="0 0 24 24" style="width: 17px; height: 17px; color: #16281f;"><path d="M3 5 H21 V16 H12 L7 20 V16 H3 Z" fill="none" stroke="currentColor" stroke-width="2"></path></svg>
                 </div>
               </div>
+              </sc-if>
             </div>
           </div>
 
@@ -260,6 +263,19 @@
             </sc-for>
             <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: #5d6b5f;"><span style="width: 12px; height: 10px; border: 1px solid #16281f; border-radius: 3px;"></span>Anuncio de material · kg</div>
           </div>
+          <sc-if value="{{ savedPanel }}">
+            <aside class="flow-side" aria-label="Rutas guardadas">
+              <div style="display: flex; align-items: center; justify-content: space-between;"><span class="flow-heading">RUTAS GUARDADAS</span><button class="flow-button" type="button" aria-label="Cerrar rutas guardadas" onClick="{{ closeSaved }}">×</button></div>
+              <sc-if value="{{ savedEmpty }}"><div style="font-size: 13px; line-height: 1.5;">No tienes rutas guardadas. Prepara una ruta y pulsa Guardar ruta.</div></sc-if>
+              <sc-for list="{{ savedRoutes }}" as="r">
+                <div data-saved-route="{{ r.id }}" style="border: 1px solid #e2e5dc; border-radius: 12px; padding: 16px;">
+                  <div style="font-size: 14px; font-weight: 600;">{{ r.name }}</div><div style="font-size: 12px; color: #5d6b5f; margin-top: 6px; line-height: 1.5;">{{ r.description }}</div>
+                  <div style="font: 11px 'IBM Plex Mono', monospace; margin-top: 12px; line-height: 1.8;">{{ r.count }} paradas · {{ r.distance }} · {{ r.minutes }} min</div>
+                  <div style="display: flex; gap: 8px; margin-top: 12px;"><button class="flow-button flow-primary" type="button" onClick="{{ r.load }}">Cargar ruta</button><button class="flow-button flow-danger" type="button" onClick="{{ r.remove }}">Eliminar</button></div>
+                </div>
+              </sc-for>
+            </aside>
+          </sc-if>
           <sc-if value="{{ pointDetail }}">
             <aside aria-label="Detalle del punto de reciclaje" onKeyDown="{{ onPointKey }}" style="position: absolute; z-index: 5; right: 0; top: 0; bottom: 0; width: 320px; background: #ffffff; border-left: 1px solid #e2e5dc; padding: 20px; display: flex; flex-direction: column; gap: 18px; overflow-y: auto;">
               <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
@@ -293,9 +309,9 @@
 
         <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 14px; overflow-x: auto;">
           <div style="display: flex; gap: 6px; padding: 16px 20px; border-bottom: 1px solid #eceee7; min-width: 720px;">
-            <div style="background: #16281f; color: #ffffff; font-size: 12px; font-weight: 600; padding: 6px 13px; border-radius: 20px; cursor: pointer;">Activos · 2</div>
-            <div style="border: 1px solid #d8dcd2; color: #3d4a3f; font-size: 12px; padding: 6px 13px; border-radius: 20px; cursor: pointer;" style-hover="border-color: #4c7a2f;">Completados · 30</div>
-            <div style="border: 1px solid #d8dcd2; color: #3d4a3f; font-size: 12px; padding: 6px 13px; border-radius: 20px; cursor: pointer;" style-hover="border-color: #4c7a2f;">Cancelados · 1</div>
+            <div style="background: #16281f; color: #ffffff; font-size: 12px; font-weight: 600; padding: 6px 13px; border-radius: 20px; cursor: pointer;">Activos · {{ activePickups }}</div>
+            <div style="border: 1px solid #d8dcd2; color: #3d4a3f; font-size: 12px; padding: 6px 13px; border-radius: 20px; cursor: pointer;" style-hover="border-color: #4c7a2f;">Completados · {{ completedPickups }}</div>
+            <div style="border: 1px solid #d8dcd2; color: #3d4a3f; font-size: 12px; padding: 6px 13px; border-radius: 20px; cursor: pointer;" style-hover="border-color: #4c7a2f;">Cancelados · {{ canceledPickups }}</div>
           </div>
 
           <div style="display: grid; grid-template-columns: 92px minmax(200px, 1.4fr) minmax(140px, 1fr) 130px 130px 92px; min-width: 720px; gap: 12px; padding: 13px 20px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e; border-bottom: 1px solid #eceee7;">
@@ -308,10 +324,10 @@
           </div>
 
           <sc-for list="{{ pickups }}" as="p" hint-placeholder-count="4">
-            <div style="display: grid; grid-template-columns: 92px minmax(200px, 1.4fr) minmax(140px, 1fr) 130px 130px 92px; min-width: 720px; gap: 12px; padding: 16px 20px; border-bottom: 1px solid #eceee7; align-items: center;">
+            <div data-delivery-row="{{ p.id }}" style="background: {{ p.rowBg }}; display: grid; grid-template-columns: 92px minmax(200px, 1.4fr) minmax(140px, 1fr) 130px 130px 92px; min-width: 720px; gap: 12px; padding: 16px 20px; border-bottom: 1px solid #eceee7; align-items: center;">
               <div style="font-family: 'IBM Plex Mono', monospace; font-size: 17px; font-weight: 600;">{{ p.kg }}</div>
               <div>
-                <div style="font-size: 13px; font-weight: 600;">{{ p.material }}</div>
+                <div style="font-size: 13px; font-weight: 600;">{{ p.material }}</div><sc-if value="{{ p.priority }}"><span class="material-tag" style="display: inline-block; background: #fdf3dd; color: #8a6a1f; border-color: #e8b53a; margin-top: 6px;">★ Prioritaria</span></sc-if>
                 <div style="font-size: 11.5px; color: #5d6b5f; margin-top: 2px;">{{ p.place }}</div>
               </div>
               <div style="font-size: 12.5px; color: #3d4a3f;">{{ p.person }}</div>
@@ -319,14 +335,25 @@
               <div>
                 <div style="display: inline-block; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; background: {{ p.stateBg }}; color: {{ p.stateFg }};">{{ p.state }}</div>
               </div>
-              <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                <div onClick="{{ goChats }}" title="Abrir chat" style="border: 1px solid #d8dcd2; padding: 7px; border-radius: 7px; cursor: pointer; display: flex;" style-hover="border-color: #16281f;">
+              <div style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end;">
+                <div onClick="{{ p.openChat }}" title="Abrir chat" style="border: 1px solid #d8dcd2; padding: 7px; border-radius: 7px; cursor: pointer; display: flex;" style-hover="border-color: #16281f;">
                   <svg viewBox="0 0 24 24" style="width: 15px; height: 15px; color: #16281f;"><path d="M3 5 H21 V16 H12 L7 20 V16 H3 Z" fill="none" stroke="currentColor" stroke-width="2"></path></svg>
                 </div>
-                <div onClick="{{ openScanner }}" title="Escanear QR de entrega" style="border: 1px solid #d8dcd2; padding: 7px; border-radius: 7px; cursor: pointer; display: flex;" style-hover="border-color: #16281f;">
+                <div onClick="{{ p.openScanner }}" title="Escanear QR de entrega" style="border: 1px solid #d8dcd2; padding: 7px; border-radius: 7px; cursor: pointer; display: flex;" style-hover="border-color: #16281f;">
                   <svg viewBox="0 0 24 24" style="width: 15px; height: 15px; color: #16281f;"><rect x="4" y="4" width="6" height="6" fill="none" stroke="currentColor" stroke-width="2"></rect><rect x="14" y="4" width="6" height="6" fill="none" stroke="currentColor" stroke-width="2"></rect><rect x="4" y="14" width="6" height="6" fill="none" stroke="currentColor" stroke-width="2"></rect><path d="M14 14 H20 V20 H14 Z" fill="none" stroke="currentColor" stroke-width="2"></path></svg>
                 </div>
+                <button type="button" class="flow-button" aria-label="Acciones de {{ p.id }}" aria-expanded="{{ p.menuOpen }}" onClick="{{ p.toggleMenu }}" style="padding: 5px 9px;">⋯</button>
               </div>
+              <sc-if value="{{ p.canTrack }}"><div style="grid-column: 1 / -1;"><button type="button" class="flow-button" onClick="{{ p.track }}">Seguir recolector</button></div></sc-if>
+              <sc-if value="{{ p.reason }}"><div style="grid-column: 1 / -1; color: #b1573f; font-size: 12px;">Motivo de cancelación: {{ p.reason }}</div></sc-if>
+              <sc-if value="{{ p.menuOpen }}">
+                <div role="group" aria-label="Acciones de la recolección {{ p.id }}" style="grid-column: 1 / -1; border-top: 1px solid #e2e5dc; padding-top: 12px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
+                  <button type="button" class="flow-button" disabled="{{ p.locked }}" onClick="{{ p.reschedule }}">Reprogramar</button>
+                  <button type="button" class="flow-button flow-danger" disabled="{{ p.locked }}" onClick="{{ p.cancel }}">Cancelar recolección</button>
+                  <button type="button" class="flow-button" onClick="{{ p.togglePriority }}" aria-pressed="{{ p.priority }}">{{ p.priorityLabel }}</button>
+                  <span style="font-size: 11px; color: #5d6b5f;">{{ p.lockHint }}</span>
+                </div>
+              </sc-if>
             </div>
           </sc-for>
         </div>
@@ -433,9 +460,11 @@
         <div style="background: #ffffff; border-left: 1px solid #e2e5dc; padding: 20px; display: flex; flex-direction: column; gap: 18px; overflow-y: auto;">
           <div>
             <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e;">ENTREGA EN CURSO</div>
-            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 600; margin-top: 8px;">24 kg</div>
-            <div style="font-size: 12px; color: #5d6b5f; margin-top: 2px;">Cartón plegado · Av. Pershing 345</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 600; margin-top: 8px;">{{ chatDelivery.kg }}</div>
+            <div style="font-size: 12px; color: #5d6b5f; margin-top: 2px;">{{ chatDelivery.material }} · {{ chatDelivery.window }}</div>
           </div>
+          <sc-if value="{{ chatCanTrack }}"><button type="button" class="flow-button flow-primary" onClick="{{ chatTrack }}">Seguir recolector</button></sc-if>
+          <sc-if value="{{ chatCanScan }}">
           <div style="border: 1px solid #e2e5dc; border-radius: 12px; padding: 16px; text-align: center;">
             <div style="font-size: 12.5px; font-weight: 600;">Confirmación por QR</div>
             <div style="font-size: 11.5px; color: #5d6b5f; margin-top: 4px; line-height: 1.5;">El generador muestra su código al momento del recojo.</div>
@@ -456,6 +485,7 @@
             </div>
             <div onClick="{{ openScanner }}" style="background: #a3d24a; color: #16281f; font-size: 13px; font-weight: 600; padding: 11px; border-radius: 8px; cursor: pointer;" style-hover="background: #93c33a;">Abrir escáner</div>
           </div>
+          </sc-if>
           <div>
             <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e;">CONTRAPARTE</div>
             <div style="display: flex; flex-direction: column; gap: 9px; margin-top: 12px; font-size: 12.5px; color: #3d4a3f;">
@@ -474,9 +504,9 @@
 
         <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 14px; overflow-x: auto;">
           <div style="display: flex; gap: 6px; padding: 16px 20px; border-bottom: 1px solid #eceee7; min-width: 720px;">
-            <div style="background: #16281f; color: #ffffff; font-size: 12px; font-weight: 600; padding: 6px 13px; border-radius: 20px; cursor: pointer;">Activos · 3</div>
+            <div style="background: #16281f; color: #ffffff; font-size: 12px; font-weight: 600; padding: 6px 13px; border-radius: 20px; cursor: pointer;">Activos · {{ activePublications }}</div>
             <div style="border: 1px solid #d8dcd2; color: #3d4a3f; font-size: 12px; padding: 6px 13px; border-radius: 20px; cursor: pointer;" style-hover="border-color: #4c7a2f;">Completados · 12</div>
-            <div style="border: 1px solid #d8dcd2; color: #3d4a3f; font-size: 12px; padding: 6px 13px; border-radius: 20px; cursor: pointer;" style-hover="border-color: #4c7a2f;">Cancelados · 1</div>
+            <div style="border: 1px solid #d8dcd2; color: #3d4a3f; font-size: 12px; padding: 6px 13px; border-radius: 20px; cursor: pointer;" style-hover="border-color: #4c7a2f;">Cancelados · {{ canceledPublications }}</div>
           </div>
 
           <div style="display: grid; grid-template-columns: 92px minmax(200px, 1.4fr) minmax(140px, 1fr) 130px 130px 92px; min-width: 720px; gap: 12px; padding: 13px 20px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e; border-bottom: 1px solid #eceee7;">
@@ -489,10 +519,10 @@
           </div>
 
           <sc-for list="{{ publications }}" as="pub" hint-placeholder-count="4">
-            <div style="display: grid; grid-template-columns: 92px minmax(200px, 1.4fr) minmax(140px, 1fr) 130px 130px 92px; min-width: 720px; gap: 12px; padding: 16px 20px; border-bottom: 1px solid #eceee7; align-items: center;">
+            <div data-delivery-row="{{ pub.id }}" style="background: {{ pub.rowBg }}; display: grid; grid-template-columns: 92px minmax(200px, 1.4fr) minmax(140px, 1fr) 130px 130px 92px; min-width: 720px; gap: 12px; padding: 16px 20px; border-bottom: 1px solid #eceee7; align-items: center;">
               <div style="font-family: 'IBM Plex Mono', monospace; font-size: 17px; font-weight: 600;">{{ pub.kg }}</div>
               <div>
-                <div style="font-size: 13px; font-weight: 600;">{{ pub.material }}</div>
+                <div style="font-size: 13px; font-weight: 600;">{{ pub.material }}</div><sc-if value="{{ pub.priority }}"><span class="material-tag" style="display: inline-block; background: #fdf3dd; color: #8a6a1f; border-color: #e8b53a; margin-top: 6px;">★ Prioritaria</span></sc-if>
                 <div style="font-size: 11.5px; color: #5d6b5f; margin-top: 2px;">{{ pub.posted }}</div>
               </div>
               <div style="font-size: 12.5px; color: {{ pub.personFg }};">{{ pub.person }}</div>
@@ -500,14 +530,25 @@
               <div>
                 <div style="display: inline-block; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; background: {{ pub.stateBg }}; color: {{ pub.stateFg }};">{{ pub.state }}</div>
               </div>
-              <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                <div onClick="{{ goChats }}" title="Abrir chat" style="border: 1px solid #d8dcd2; padding: 7px; border-radius: 7px; cursor: pointer; display: flex;" style-hover="border-color: #16281f;">
+              <div style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end;">
+                <div onClick="{{ pub.openChat }}" title="Abrir chat" style="border: 1px solid #d8dcd2; padding: 7px; border-radius: 7px; cursor: pointer; display: flex;" style-hover="border-color: #16281f;">
                   <svg viewBox="0 0 24 24" style="width: 15px; height: 15px; color: #16281f;"><path d="M3 5 H21 V16 H12 L7 20 V16 H3 Z" fill="none" stroke="currentColor" stroke-width="2"></path></svg>
                 </div>
                 <div title="Ver anuncio" style="border: 1px solid #d8dcd2; padding: 7px; border-radius: 7px; cursor: pointer; display: flex;" style-hover="border-color: #16281f;">
                   <svg viewBox="0 0 24 24" style="width: 15px; height: 15px; color: #16281f;" fill="none" stroke="currentColor" stroke-width="2"><path d="M2.5 12 C5 7.5 8.3 5.5 12 5.5 C15.7 5.5 19 7.5 21.5 12 C19 16.5 15.7 18.5 12 18.5 C8.3 18.5 5 16.5 2.5 12 Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                 </div>
+                <button type="button" class="flow-button" aria-label="Acciones de {{ pub.id }}" aria-expanded="{{ pub.menuOpen }}" onClick="{{ pub.toggleMenu }}" style="padding: 5px 9px;">⋯</button>
               </div>
+              <sc-if value="{{ pub.canTrack }}"><div style="grid-column: 1 / -1;"><button type="button" class="flow-button" onClick="{{ pub.track }}">Seguir recolector</button></div></sc-if>
+              <sc-if value="{{ pub.reason }}"><div style="grid-column: 1 / -1; color: #b1573f; font-size: 12px;">Motivo de cancelación: {{ pub.reason }}</div></sc-if>
+              <sc-if value="{{ pub.menuOpen }}">
+                <div role="group" aria-label="Acciones de la recolección {{ pub.id }}" style="grid-column: 1 / -1; border-top: 1px solid #e2e5dc; padding-top: 12px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
+                  <button type="button" class="flow-button" disabled="{{ pub.locked }}" onClick="{{ pub.reschedule }}">Reprogramar</button>
+                  <button type="button" class="flow-button flow-danger" disabled="{{ pub.locked }}" onClick="{{ pub.cancel }}">Cancelar recolección</button>
+                  <button type="button" class="flow-button" onClick="{{ pub.togglePriority }}" aria-pressed="{{ pub.priority }}">{{ pub.priorityLabel }}</button>
+                  <span style="font-size: 11px; color: #5d6b5f;">{{ pub.lockHint }}</span>
+                </div>
+              </sc-if>
             </div>
           </sc-for>
         </div>
@@ -873,13 +914,66 @@
 
   </div>
 
+  <sc-if value="{{ saveDialog }}">
+    <div class="flow-overlay">
+      <div class="flow-dialog" role="dialog" aria-modal="true" aria-label="Guardar ruta" onKeyDown="{{ dialogKey }}">
+        <div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-size: 17px; font-weight: 600;">Guardar ruta</span><button type="button" class="flow-button" aria-label="Cerrar diálogo" onClick="{{ closeDialog }}">×</button></div>
+        <div style="font: 11px 'IBM Plex Mono', monospace; color: #5d6b5f;">{{ routeMeta }} · {{ routeDistance }} · {{ routeMinutes }} min</div>
+        <label style="font-size: 12px; font-weight: 600;">Nombre de la ruta<input class="flow-field" aria-label="Nombre de la ruta" value="{{ routeName }}" onChange="{{ onRouteName }}" maxlength="60" placeholder="Ej. Recojos del sábado"></input></label>
+        <label style="font-size: 12px; font-weight: 600;">Descripción (opcional)<textarea class="flow-field" aria-label="Descripción (opcional)" value="{{ routeDescription }}" onChange="{{ onRouteDescription }}" maxlength="240" rows="3"></textarea></label>
+        <sc-if value="{{ formError }}"><div role="alert" style="font-size: 12px; color: #b1573f;">{{ formError }}</div></sc-if>
+        <div style="display: flex; gap: 8px;"><button type="button" class="flow-button flow-primary" onClick="{{ saveRoute }}">Confirmar guardado</button><button type="button" class="flow-button" onClick="{{ closeDialog }}">Volver</button></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ actionDialog }}">
+    <div class="flow-overlay">
+      <div class="flow-dialog" role="dialog" aria-modal="true" aria-label="{{ actionTitle }}" onKeyDown="{{ dialogKey }}">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;"><span style="font-size: 17px; font-weight: 600;">{{ actionTitle }}</span><button type="button" class="flow-button" aria-label="Cerrar diálogo" onClick="{{ closeDialog }}">×</button></div>
+        <div style="font-size: 13px; line-height: 1.6;">{{ actionDelivery.material }} · {{ actionDelivery.kg }}<br>{{ actionDelivery.person }}<br><span style="color: #5d6b5f;">Ventana actual: {{ actionDelivery.window }}</span></div>
+        <sc-if value="{{ isReschedule }}">
+          <label style="font-size: 12px; font-weight: 600;">Nueva fecha<input class="flow-field" type="date" aria-label="Nueva fecha" min="{{ today }}" value="{{ scheduleDate }}" onChange="{{ onScheduleDate }}"></input></label>
+          <label style="font-size: 12px; font-weight: 600;">Franja horaria<select class="flow-field" aria-label="Franja horaria" value="{{ scheduleSlot }}" onChange="{{ onScheduleSlot }}"><sc-for list="{{ timeSlots }}" as="t"><option value="{{ t.value }}">{{ t.value }}</option></sc-for></select></label>
+        </sc-if>
+        <sc-if value="{{ isCancel }}">
+          <div style="font-size: 13px; line-height: 1.5;">¿Confirmas que deseas cancelar esta recolección? El motivo quedará visible en la fila.</div>
+          <label style="font-size: 12px; font-weight: 600;">Motivo de cancelación<textarea class="flow-field" aria-label="Motivo de cancelación" value="{{ reason }}" onChange="{{ onReason }}" maxlength="240" rows="3" placeholder="Indica por qué necesitas cancelarla"></textarea></label>
+        </sc-if>
+        <sc-if value="{{ lockedAction }}"><div role="status" style="font-size: 12px; color: #5d6b5f;">Esta recolección ya está cerrada y no admite cambios de fecha ni cancelación.</div></sc-if>
+        <sc-if value="{{ formError }}"><div role="alert" style="font-size: 12px; color: #b1573f;">{{ formError }}</div></sc-if>
+        <div style="display: flex; gap: 8px;"><button type="button" class="flow-button flow-primary" disabled="{{ lockedAction }}" onClick="{{ confirmAction }}">Confirmar</button><button type="button" class="flow-button" onClick="{{ closeDialog }}">Volver</button></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ trackingVisible }}">
+    <div class="flow-overlay">
+      <div class="flow-dialog" role="dialog" aria-modal="true" aria-label="Seguimiento del recolector" onKeyDown="{{ trackingKey }}" style="width: 900px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;"><div><div class="flow-heading">SEGUIMIENTO DEL RECOLECTOR</div><div style="font-size: 17px; font-weight: 600; margin-top: 6px;">{{ tracked.person }}</div></div><button type="button" class="flow-button" aria-label="Cerrar seguimiento" onClick="{{ closeTracking }}">×</button></div>
+        <div style="display: flex; justify-content: space-between; gap: 24px; font-size: 13px;"><div><div data-tracking-status="true" role="status" style="font-weight: 600;">En camino</div><div style="color: #5d6b5f; margin-top: 6px;">Destino: {{ tracked.address }}</div></div><div style="text-align: right;"><div data-tracking-eta="true" style="font: 22px 'IBM Plex Mono', monospace;">18 min</div><div style="font-size: 11px; color: #5d6b5f;">Llegada estimada</div></div></div>
+        <div style="position: relative; height: 360px; flex: none; border: 1px solid #e2e5dc; border-radius: 12px; overflow: hidden; background: #e7ebe1;">
+          <svg viewBox="0 0 1000 700" preserveAspectRatio="none" style="position: absolute; inset: 0; width: 100%; height: 100%;">
+            <rect x="40" y="40" width="200" height="180" rx="6" fill="#dde3d5"></rect><rect x="300" y="40" width="300" height="180" rx="6" fill="#dde3d5"></rect><rect x="660" y="40" width="300" height="200" rx="6" fill="#d5e0cb"></rect>
+            <rect x="40" y="280" width="200" height="360" rx="6" fill="#dde3d5"></rect><rect x="300" y="280" width="300" height="360" rx="6" fill="#dde3d5"></rect><rect x="660" y="280" width="300" height="360" rx="6" fill="#dde3d5"></rect>
+            <path d="M0 240 H1000 M0 500 H1000 M260 0 V700 M640 0 V700" stroke="#ffffff" stroke-width="14"></path>
+            <path d="M150 560 L800 175" stroke="#16281f" stroke-width="9" fill="none"></path><path d="M150 560 L800 175" stroke="#a3d24a" stroke-width="5" fill="none"></path>
+          </svg>
+          <div style="position: absolute; left: 80%; top: 25%; transform: translate(-50%,-50%); background: #ffffff; padding: 8px 12px; border: 1px solid #4c7a2f; border-radius: 8px; font-size: 12px;">Tu dirección</div>
+          <div data-tracking-marker="true" aria-label="Posición del recolector" style="position: absolute; left: 15%; top: 80%; transition: left .5s linear, top .5s linear; transform: translate(-50%,-50%); border: 3px solid #ffffff; background: #16281f; color: #a3d24a; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><span style="width: 18px; height: 18px;" dangerouslySetInnerHTML="{{ collectorIcon }}"></span></div>
+        </div>
+        <div style="font-size: 11px; color: #5d6b5f;">Ubicación y tiempos simulados para la demostración.</div>
+      </div>
+    </div>
+  </sc-if>
+
   <sc-if value="{{ scannerOpen }}">
     <div style="position: fixed; inset: 0; background: rgba(22,40,31,0.62); display: flex; align-items: center; justify-content: center; z-index: 60;">
-      <div style="width: 420px; background: #ffffff; border-radius: 16px; overflow: hidden;">
+      <div role="dialog" aria-modal="true" aria-label="Confirmar entrega" onKeyDown="{{ dialogKey }}" style="max-height: calc(100vh - 32px); overflow-y: auto; width: 420px; background: #ffffff; border-radius: 16px; overflow-x: hidden;">
         <div style="background: #16281f; padding: 18px 22px; display: flex; align-items: center; justify-content: space-between;">
           <div>
             <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: #a3d24a;">CONFIRMAR ENTREGA</div>
-            <div style="font-size: 15px; font-weight: 600; color: #ffffff; margin-top: 5px;">Minimarket H&amp;J · 24 kg</div>
+            <div style="font-size: 15px; font-weight: 600; color: #ffffff; margin-top: 5px;">{{ scannerTitle }}</div>
           </div>
           <div onClick="{{ closeScanner }}" title="Cerrar" style="color: #8fa392; font-size: 20px; cursor: pointer; line-height: 1;">×</div>
         </div>
@@ -903,10 +997,15 @@
           </div>
           <div style="font-size: 12.5px; color: #3d4a3f; text-align: center; margin-top: 16px; line-height: 1.55;">Apunta al código que muestra el generador. Al confirmar se registra la entrega y podrán valorarse.</div>
           <div style="display: flex; gap: 8px; margin-top: 18px;">
-            <div onClick="{{ confirmDelivery }}" style="flex: 1; background: #a3d24a; color: #16281f; font-size: 13.5px; font-weight: 600; text-align: center; padding: 12px; border-radius: 8px; cursor: pointer;" style-hover="background: #93c33a;">Confirmar entrega</div>
+            <button type="button" disabled="{{ scannerClosed }}" class="map-button" onClick="{{ confirmDelivery }}" style="border: none; flex: 1; background: #a3d24a; color: #16281f; font-size: 13.5px; font-weight: 600; text-align: center; padding: 12px; border-radius: 8px; cursor: pointer;" style-hover="background: #93c33a;">Confirmar entrega</button>
             <div onClick="{{ closeScanner }}" style="border: 1px solid #d8dcd2; border-radius: 8px; padding: 12px 18px; font-size: 13px; cursor: pointer;" style-hover="border-color: #16281f;">Cancelar</div>
           </div>
           <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #8b9186; text-align: center; margin-top: 12px;">O INGRESA EL CÓDIGO MANUALMENTE</div>
+          <label style="display: block; font-size: 12px; margin-top: 12px;">Código de entrega<input class="flow-field" aria-label="Código de entrega" value="{{ manualCode }}" onChange="{{ onManualCode }}" onKeyDown="{{ manualKey }}" placeholder="Ej. QH-R2" maxlength="24"></input></label>
+          <div style="font-size: 11px; color: #5d6b5f; margin-top: 7px;">Código de muestra para esta entrega: {{ actionDelivery.code }}</div>
+          <sc-if value="{{ formError }}"><div role="alert" style="font-size: 12px; color: #b1573f; margin-top: 10px;">{{ formError }}</div></sc-if>
+          <sc-if value="{{ scannerClosed }}"><div role="status" style="font-size: 12px; color: #5d6b5f; margin-top: 10px;">Esta entrega ya está {{ actionDelivery.state }}.</div></sc-if>
+          <button type="button" class="flow-button" disabled="{{ scannerClosed }}" onClick="{{ confirmManual }}" style="width: 100%; margin-top: 12px;">Confirmar con código</button>
         </div>
       </div>
     </div>
@@ -916,8 +1015,8 @@
     <div style="position: fixed; inset: 0; background: rgba(22,40,31,0.62); display: flex; align-items: center; justify-content: center; z-index: 60;">
       <div style="width: 400px; background: #ffffff; border-radius: 16px; padding: 26px;">
         <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: #6c7a6e;">ENTREGA CONFIRMADA</div>
-        <div style="font-size: 17px; font-weight: 600; margin-top: 10px;">24 kg de cartón recuperados</div>
-        <div style="font-size: 12.5px; color: #5d6b5f; margin-top: 6px; line-height: 1.55;">¿Cómo fue tu experiencia con Juan Flores?</div>
+        <div style="font-size: 17px; font-weight: 600; margin-top: 10px;">{{ confirmedTitle }}</div>
+        <div style="font-size: 12.5px; color: #5d6b5f; margin-top: 6px; line-height: 1.55;">¿Cómo fue tu experiencia con {{ confirmedPerson }}?</div>
         <div style="display: flex; gap: 8px; margin: 20px 0 4px;">
           <sc-for list="{{ stars }}" as="s" hint-placeholder-count="5">
             <div onClick="{{ s.set }}" style="flex: 1; height: 46px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; background: {{ s.bg }}; color: {{ s.fg }}; border: 1px solid {{ s.border }};">{{ s.n }}</div>
@@ -1047,6 +1146,84 @@ const FAQ_DATA = [
   { q: "¿Cuándo debo llamar a soporte?", a: "Usa la llamada 24/7 solo para situaciones extremas: riesgo de seguridad, suplantación de identidad o incumplimientos graves. Los demás casos se resuelven más rápido con un reporte escrito." }
 ];
 
+const PICKUPS = [
+      { id: "r1", thread: "t1", code: "QH-R1", kg: "24 kg", material: "Cartón plegado", place: "Minimarket H&J · Magdalena", person: "Juan Flores", window: "HOY 14:00–18:00", state: "En camino", stateBg: "#eef2e4", stateFg: "#3f6224" },
+      { id: "r2", thread: "t2", code: "QH-R2", kg: "8,5 kg", material: "Botellas PET", place: "Bodega Olivo · San Isidro", person: "Camila Salazar", window: "MAÑ 09:00", state: "Confirmado", stateBg: "#eceee7", stateFg: "#5d6b5f" },
+      { id: "r3", thread: "t3", code: "QH-R3", kg: "9 kg", material: "Bolsas de plástico", place: "Casa · Jesús María", person: "Emilia Valencia", window: "AYER 17:00", state: "Completado", stateBg: "#eef2e4", stateFg: "#3f6224" },
+      { id: "r4", thread: "t3", code: "QH-R4", kg: "14 kg", material: "Vidrio mixto", place: "Rest. La Huerta · Lince", person: "Camila Salazar", window: "HACE 2 D", state: "Completado", stateBg: "#eef2e4", stateFg: "#3f6224" }
+    ];
+const PUBLICATIONS = [
+      { id: "g1", thread: "t1", address: "Av. Pershing 345, Magdalena", kg: "30 kg", material: "Cartón plegado", posted: "Publicado hace 2 h", person: "Marco Quispe", personFg: "#3d4a3f", window: "HOY 14:00–18:00", state: "En camino", stateBg: "#eef2e4", stateFg: "#3f6224" },
+      { id: "g2", thread: "t2", address: "Av. Salaverry 820, Jesús María", kg: "12 kg", material: "Papel de oficina", posted: "Publicado hace 5 h", person: "Rosa Huamán", personFg: "#3d4a3f", window: "HOY 16:00–19:00", state: "Reclamado", stateBg: "#eceee7", stateFg: "#5d6b5f" },
+      { id: "g3", thread: "t3", address: "Jr. Cuba 195, San Isidro", kg: "6 kg", material: "Botellas PET", posted: "Publicado ayer", person: "Sin reclamar", personFg: "#8b9186", window: "MAÑ 09:00", state: "Esperando", stateBg: "#fdf3dd", stateFg: "#8a6a1f" },
+      { id: "g4", thread: "t3", address: "Av. Arenales 1200, Lince", kg: "18 kg", material: "Vidrio mixto", posted: "Publicado hace 3 d", person: "Luis Ttito", personFg: "#3d4a3f", window: "HACE 2 D", state: "Completado", stateBg: "#eef2e4", stateFg: "#3f6224" }
+    ];
+
+// Una misma geometría alimenta pines, trazo, optimización y métricas simuladas.
+const ROUTE_ORIGIN = { x: 12, y: 92 };
+const ROUTE_LOCATIONS = ADS.map((a, i) => ({ id: a.id, name: a.place.split(" · ")[0],
+  detail: a.material, x: [48, 68, 83, 49][i], y: [40, 29, 72, 95][i],
+  kg: parseFloat(a.kg.replace(",", ".")), pickup: ["r1", "r2", null, null][i] }))
+  .concat(RECYCLING_POINTS.map(p => ({ id: p.id, name: p.name, detail: POINT_TYPES[p.type].label + " · " + p.district,
+    x: p.x, y: p.y, kg: 0 })));
+const SAVED_ROUTES = [
+  { id: "centro", name: "Circuito Lima Centro", description: "Recojos y puntos de Lince y Jesús María.", stops: ["a1", "a2", "p4", "p3"] },
+  { id: "costa", name: "Acopios de la costa", description: "Magdalena, Pueblo Libre y San Miguel.", stops: ["p1", "p5", "p6"] },
+  { id: "sur", name: "Reciclaje Lima Sur", description: "Miraflores y Surquillo.", stops: ["p8", "p7"] }
+];
+const TIME_SLOTS = ["08:00–11:00", "11:00–14:00", "14:00–18:00", "18:00–21:00"];
+const todayDate = () => { const d = new Date(); return [d.getFullYear(), String(d.getMonth()+1).padStart(2,"0"), String(d.getDate()).padStart(2,"0")].join("-"); };
+const validDate = value => /^\d{4}-\d{2}-\d{2}$/.test(value || "") && !isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0,10) === value;
+const validStops = ids => [...new Set(ids)].filter(id => ROUTE_LOCATIONS.some(p => p.id === id));
+// 1 unidad del dibujo = 80 m, velocidad media 15 km/h y 3 min por parada.
+const legDistance = (a, b) => Math.hypot(a.x-b.x, a.y-b.y) * 0.08;
+const routeStats = ids => {
+  let previous = ROUTE_ORIGIN, distance = 0, kg = 0;
+  const stops = validStops(ids).map(id => ROUTE_LOCATIONS.find(p => p.id === id));
+  stops.forEach(p => { distance += legDistance(previous, p); kg += p.kg; previous = p; });
+  return { stops, kg: kg.toLocaleString("es-PE") + " kg", distance,
+    distanceLabel: distance.toFixed(1).replace(".", ",") + " km", minutes: Math.ceil(distance / 15 * 60 + stops.length * 3) };
+};
+const optimizeStops = ids => {
+  const remaining = validStops(ids), ordered = []; let previous = ROUTE_ORIGIN;
+  while (remaining.length) {
+    remaining.sort((a,b) => legDistance(previous, ROUTE_LOCATIONS.find(p=>p.id===a)) - legDistance(previous, ROUTE_LOCATIONS.find(p=>p.id===b)) || a.localeCompare(b));
+    const id = remaining.shift(); ordered.push(id); previous = ROUTE_LOCATIONS.find(p=>p.id===id);
+  }
+  // El vecino más cercano es una heurística: conservar el original si era mejor.
+  return routeStats(ordered).distance <= routeStats(ids).distance ? ordered : validStops(ids);
+};
+const readFlowState = props => {
+  const rows = PICKUPS.concat(PUBLICATIONS), updates = {};
+  try {
+    const raw = JSON.parse(props.updates || "{}");
+    rows.forEach(row => {
+      const u = raw && raw[row.id]; if (!u || typeof u !== "object") return;
+      const next = {};
+      if (u.priority === true) next.priority = true;
+      if (["Reprogramado", "Cancelado", "Completado"].includes(u.state)) next.state = u.state;
+      if (validDate(u.date) && TIME_SLOTS.includes(u.slot)) { next.date = u.date; next.slot = u.slot; }
+      if (typeof u.reason === "string") next.reason = u.reason.slice(0,240);
+      updates[row.id] = next;
+    });
+  } catch (_) { /* Un enlace mal formado conserva los datos de muestra. */ }
+  (props.priority || "").split(",").forEach(id => { if (rows.some(r=>r.id===id)) updates[id] = Object.assign({},updates[id],{priority:true}); });
+  const saved = SAVED_ROUTES.find(r => r.id === props.route);
+  let ids = props.stops != null ? validStops(props.stops.split(",")) : saved ? saved.stops.slice() : ["a1","a2"];
+  ids = ids.filter(id => { const p = ROUTE_LOCATIONS.find(p=>p.id===id); return !p.pickup || !["Cancelado","Completado"].includes((updates[p.pickup]||{}).state); });
+  if (props.opt === "1") ids = optimizeStops(ids);
+  const row = rows.find(r => r.id === props.row);
+  return { routeIds: ids, optimized: props.opt === "1", loadedRoute: saved ? saved.id : "", savedPanel: props.panel === "rutas",
+    dialog: ["guardar","reprogramar","cancelar","qr"].includes(props.dialog) ? props.dialog : "",
+    actionRow: row ? row.id : null, menuRow: rows.some(r=>r.id===props.menu) ? props.menu : null,
+    rowUpdates: updates, thread: ["t1","t2","t3"].includes(props.thread) ? props.thread : "t1",
+    chatRow: rows.some(r=>r.id===props.chatRow) ? props.chatRow : null,
+    tracking: PUBLICATIONS.some(r=>r.id===props.track) ? props.track : null,
+    trackingStart: Math.max(0,Math.min(100,Number(props.progress)||0)),
+    scheduleDate: validDate(props.date) ? props.date : "", scheduleSlot: TIME_SLOTS.includes(props.slot) ? props.slot : TIME_SLOTS[0],
+    reason: "", manualCode: "", formError: "", routeName: "", routeDescription: "", routeNotice: "" };
+};
+
 class Component extends DCLogic {
   state = {
     tab: null,
@@ -1056,10 +1233,12 @@ class Component extends DCLogic {
     // "reciclador" por defecto. MODO lo sigue cambiando en caliente.
     role: TAB_ROLE[(this.props || {}).defaultTab || "mapa"] ? null : ((this.props || {}).role || null),
     ...readMapState(this.props || {}),
-    routePoints: [],
+    ...readFlowState(this.props || {}),
+    savedRoutes: SAVED_ROUTES.map(r => Object.assign({}, r, { stops: r.stops.slice() })),
+    nextRouteId: 1,
     claimed: { a1: true, a2: true }, // anuncios reclamados (ids de ADS)
-    thread: "t1", draft: "", extra: {},
-    scannerOpen: false, rateOpen: false, rating: 0,
+    draft: "", extra: {},
+    rateOpen: false, rating: 0, confirmedRow: null,
     materials: { carton: true }, qty: "24",
     faqOpen: { 0: true }
   };
@@ -1070,12 +1249,123 @@ class Component extends DCLogic {
   role() { return this.state.role || TAB_ROLE[this.tab()] || "reciclador"; }
 
   // El runtime conserva estos estados al copiar enlaces y al usar Atrás/Adelante.
-  readMapRoute(query) { return readMapState(Object.fromEntries(query)); }
+  readMapRoute(query) {
+    const props = Object.fromEntries(query);
+    this.trackingClock = null;
+    return Object.assign(readMapState(props), readFlowState(props), { rateOpen: false });
+  }
   routeParams() {
-    return { view: this.state.mapView, q: this.state.search, material: this.state.mapMaterial,
+    const map = { view: this.state.mapView, q: this.state.search, material: this.state.mapMaterial,
       type: this.state.pointType, hidden: this.state.hiddenTypes.join(","), point: this.state.selectedPoint,
       near: this.state.filters["Cerca de mí"] ? "1" : "", heavy: this.state.filters["+20 kg"] ? "1" : "",
       today: this.state.filters.Hoy ? "1" : "" };
+    if (this.tab() !== "mapa") Object.keys(map).forEach(k => map[k] = "");
+    const priorities = Object.keys(this.state.rowUpdates).filter(id=>this.state.rowUpdates[id].priority);
+    const updates = {};
+    Object.keys(this.state.rowUpdates).forEach(id => { const u = Object.assign({},this.state.rowUpdates[id]); delete u.priority; if(Object.keys(u).length) updates[id]=u; });
+    return Object.assign(map, { stops: this.state.routeIds.length ? this.state.routeIds.join(",") : "none", opt: this.state.optimized ? "1" : "",
+      route: this.state.loadedRoute, panel: this.tab()==="mapa" && this.state.savedPanel ? "rutas" : "",
+      dialog: this.state.dialog, row: this.state.actionRow, menu: this.state.menuRow,
+      priority: priorities.join(","), updates: Object.keys(updates).length ? JSON.stringify(updates) : "",
+      thread: this.tab()==="chats" ? this.state.thread : "", chatRow: this.tab()==="chats" ? this.state.chatRow : "",
+      track: this.role()==="generador" && ["publicaciones","chats"].includes(this.tab()) ? this.state.tracking : "",
+      progress: this.state.tracking ? String(this.state.trackingStart) : "", date: "", slot: "" });
+  }
+
+  navigate(tab, extra = {}) {
+    this.setState(Object.assign({ tab, role: TAB_ROLE[tab] ? null : this.role(), menuRow: null, dialog: "", actionRow: null, tracking: null }, extra));
+  }
+  delivery(id) {
+    const row = PICKUPS.concat(PUBLICATIONS).find(r=>r.id===id);
+    if (!row) return null;
+    const result = Object.assign({},row,this.state.rowUpdates[id]);
+    if (result.date && result.slot) result.window = result.date.split("-").reverse().join("/") + " · " + result.slot;
+    return result;
+  }
+  changeDelivery(id, patch) {
+    this.setState(s => ({ rowUpdates: Object.assign({},s.rowUpdates,{[id]:Object.assign({},s.rowUpdates[id],patch)}) }));
+    if (["Cancelado","Completado"].includes(patch.state)) this.setState(s=>({ routeIds: s.routeIds.filter(stop=>ROUTE_LOCATIONS.find(p=>p.id===stop).pickup!==id), optimized: false }));
+  }
+  openAction(dialog, id) {
+    const row = this.delivery(id); if (!row) return;
+    this.setState({ dialog, actionRow: id, menuRow: null, scheduleDate: row.date || "", scheduleSlot: row.slot || TIME_SLOTS[0], reason: "", manualCode: "", formError: "" });
+  }
+  closeDialog() { this.setState({ dialog: "", actionRow: null, formError: "", manualCode: "" }); }
+  saveRoute() {
+    const name = this.state.routeName.trim();
+    if (!name) return this.setState({ formError: "Ingresa un nombre para la ruta." });
+    if (!this.state.routeIds.length) return this.setState({ formError: "Agrega al menos una parada antes de guardar." });
+    const id = "ruta-" + this.state.nextRouteId;
+    this.setState(s=>({ savedRoutes: s.savedRoutes.concat({id,name:name.slice(0,60),description:s.routeDescription.trim().slice(0,240),stops:s.routeIds.slice()}),
+      nextRouteId: s.nextRouteId+1, loadedRoute: id, savedPanel: true, dialog: "", routeNotice: "Ruta guardada: " + name, formError: "" }));
+  }
+  confirmAction() {
+    const row = this.delivery(this.state.actionRow);
+    if (!row || ["Completado","Cancelado"].includes(row.state)) return;
+    if (this.state.dialog === "reprogramar") {
+      if (!validDate(this.state.scheduleDate) || this.state.scheduleDate < todayDate()) return this.setState({ formError: "Elige una fecha válida desde hoy." });
+      if (!TIME_SLOTS.includes(this.state.scheduleSlot)) return this.setState({ formError: "Elige una franja horaria." });
+      this.changeDelivery(row.id,{ state:"Reprogramado",date:this.state.scheduleDate,slot:this.state.scheduleSlot });
+    } else if (this.state.dialog === "cancelar") {
+      const reason = this.state.reason.trim(); if (!reason) return this.setState({ formError: "Indica el motivo de la cancelación." });
+      this.changeDelivery(row.id,{state:"Cancelado",reason:reason.slice(0,240)});
+    }
+    this.closeDialog();
+  }
+  confirmDelivery(manual = false) {
+    const row = this.delivery(this.state.actionRow);
+    if (!row || !row.code || ["Completado","Cancelado"].includes(row.state)) return;
+    if (manual && this.state.manualCode.trim().toUpperCase() !== row.code) return this.setState({ formError: "El código no corresponde a esta entrega. Revisa el código de muestra." });
+    this.changeDelivery(row.id,{state:"Completado"});
+    this.setState({ dialog:"", actionRow:null, confirmedRow:row.id, rateOpen:true, rating:0, formError:"" });
+  }
+  openTracking(id) {
+    this.trackingClock = null;
+    this.setState({ tracking:id, trackingStart:0, menuRow:null });
+  }
+  // Actualiza únicamente el mapa de seguimiento; no repinta ni interrumpe campos.
+  afterRender(mount) {
+    const modal = mount.querySelector('[role="dialog"]');
+    const focusKey = modal ? [this.state.dialog,this.state.actionRow,this.state.tracking].join(":") : "";
+    if (focusKey && (focusKey !== this.modalFocusKey || !modal.contains(document.activeElement))) {
+      const field = modal.querySelector('input:not([disabled]),textarea:not([disabled]),select:not([disabled])') || modal.querySelector('button:not([disabled])');
+      if (field) field.focus({preventScroll:true});
+    }
+    this.modalFocusKey=focusKey;
+    const marker = mount.querySelector('[data-tracking-marker]');
+    if (!marker) { clearInterval(this.trackingTimer); this.trackingTimer=null; this.trackingClock=null; return; }
+    if (!this.trackingClock) this.trackingClock={id:this.state.tracking,start:Date.now(),base:this.state.trackingStart};
+    const tick = () => {
+      const progress = Math.min(100,this.trackingClock.base+(Date.now()-this.trackingClock.start)/600);
+      const ratio = progress/100;
+      marker.style.left = (15+65*ratio)+"%"; marker.style.top = (80-55*ratio)+"%";
+      marker.setAttribute("data-progress",progress.toFixed(1));
+      const eta = mount.querySelector('[data-tracking-eta]'), status = mount.querySelector('[data-tracking-status]');
+      if (eta) eta.textContent=Math.ceil(18*(1-ratio))+" min";
+      if (status) status.textContent=progress>=100 ? "El recolector llegó a tu dirección" : "En camino";
+    };
+    clearInterval(this.trackingTimer); tick(); this.trackingTimer=setInterval(tick,500);
+  }
+  modalKey(event, close) {
+    if (event.key === "Escape") { event.preventDefault(); close(); return; }
+    if (event.key !== "Tab") return;
+    const controls=[...event.currentTarget.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex="0"]')];
+    const first=controls[0],last=controls[controls.length-1];
+    if (event.shiftKey && document.activeElement===first) { event.preventDefault();last.focus(); }
+    else if (!event.shiftKey && document.activeElement===last) { event.preventDefault();first.focus(); }
+  }
+  deliveryRow(base) {
+    const row = this.delivery(base.id), locked = ["Completado","Cancelado"].includes(row.state);
+    return Object.assign({},row,{ rowBg:row.priority ? "#fdf3dd" : "#ffffff", priority:!!row.priority,
+      stateBg:row.state==="Cancelado" ? "#f7e9e4" : row.state==="Reprogramado" ? "#fdf3dd" : row.stateBg,
+      stateFg:row.state==="Cancelado" ? "#b1573f" : row.state==="Reprogramado" ? "#8a6a1f" : row.stateFg,
+      menuOpen:this.state.menuRow===row.id, toggleMenu:()=>this.setState({menuRow:this.state.menuRow===row.id ? null : row.id}),
+      locked, lockHint:locked ? "Esta recolección ya está cerrada." : "",
+      priorityLabel:row.priority ? "Quitar prioridad" : "Marcar como prioritaria",
+      togglePriority:()=>{this.changeDelivery(row.id,{priority:!row.priority});this.setState({menuRow:null});},
+      reschedule:()=>{if(!locked)this.openAction("reprogramar",row.id);}, cancel:()=>{if(!locked)this.openAction("cancelar",row.id);},
+      openScanner:()=>this.openAction("qr",row.id), openChat:()=>this.navigate("chats",{role:row.id.startsWith("g")?"generador":"reciclador",thread:row.thread,chatRow:row.id}),
+      canTrack:row.id.startsWith("g") && row.state==="En camino", track:()=>this.openTracking(row.id) });
   }
 
   openPoint(id) {
@@ -1119,17 +1409,23 @@ class Component extends DCLogic {
       // Chats, Perfil y Soporte existen en los dos roles y TAB_ROLE no los
       // cubre: sin fijar el rol al entrar, role() caía a "reciclador" y un
       // generador que pulsaba CHATS se encontraba con la otra navegación.
-      go: () => this.setState({ tab: k, role: TAB_ROLE[k] ? null : this.role() })
+      go: () => this.navigate(k)
     }));
 
     // El anuncio destacado es el primero que todavía se puede reclamar.
     const featuredId = (ADS.filter(a => !this.state.claimed[a.id])[0] || {}).id;
+    const stats = routeStats(this.state.routeIds);
+    const routeStops = stats.stops.map((p,i)=>Object.assign({},p,{ number:i+1,
+      open:()=>p.id.startsWith("p") ? this.openPoint(p.id) : this.setState({mapView:"anuncios",search:p.name,mapMaterial:"",filters:{}}),
+      remove:()=>this.setState(s=>({routeIds:s.routeIds.filter(id=>id!==p.id),optimized:false,loadedRoute:""})) }));
+    const routeTrace = [ROUTE_ORIGIN,...stats.stops].map(p=>p.x+","+p.y).join(" ");
     const allAds = ADS.map((a, i) => {
       const claimed = !!this.state.claimed[a.id];
       const featured = a.id === featuredId;
       const mat = MATERIALS[a.mat];
       return Object.assign({}, a, {
-        x: [48, 68, 83, 49][i], y: [40, 29, 72, 95][i],
+        x: ROUTE_LOCATIONS[i].x, y: ROUTE_LOCATIONS[i].y,
+        stopNumber: this.state.routeIds.indexOf(a.id)+1,
         pinLabel: "Anuncio: " + a.material + " · " + a.place,
         show: () => { this.setState({ mapView: "anuncios", search: a.place.split(" · ")[0], mapMaterial: "", selectedPoint: null, filters: {} }); },
         color: mat.color,
@@ -1141,7 +1437,7 @@ class Component extends DCLogic {
         btnBg: claimed ? "#eef2e4" : featured ? "#a3d24a" : "#ffffff",
         btnFg: claimed ? "#3f6224" : "#16281f",
         btnBorder: claimed ? "#eef2e4" : featured ? "#a3d24a" : "#16281f",
-        claim: claimed ? () => {} : () => this.setState(s => ({ claimed: Object.assign({}, s.claimed, { [a.id]: true }) }))
+        claim: claimed ? () => {} : () => this.setState(s => ({ claimed: Object.assign({}, s.claimed, { [a.id]: true }), routeIds:validStops(s.routeIds.concat(a.id)),optimized:false }))
       });
     });
 
@@ -1156,7 +1452,7 @@ class Component extends DCLogic {
       && (!this.state.filters["+20 kg"] || parseFloat(a.kg.replace(",", ".")) > 20)
       && (!this.state.filters.Hoy || a.window.startsWith("HOY")));
     const allPoints = RECYCLING_POINTS.map(p => {
-      const inRoute = this.state.routePoints.includes(p.id);
+      const inRoute = this.state.routeIds.includes(p.id);
       return Object.assign({}, p, {
         typeLabel: POINT_TYPES[p.type].label, icon: { __html: POINT_TYPES[p.type].icon },
         pinLabel: POINT_TYPES[p.type].label + ": " + p.name,
@@ -1165,10 +1461,11 @@ class Component extends DCLogic {
         tags: p.materials.map(k => ({ label: k === "pet" ? "PET" : MATERIALS[k].label })),
         cardBorder: this.state.selectedPoint === p.id ? "#16281f" : inRoute ? "#4c7a2f" : "#e2e5dc",
         open: () => this.openPoint(p.id), inRoute,
+        stopNumber: this.state.routeIds.indexOf(p.id)+1,
         routeBg: inRoute ? "#eef2e4" : "#a3d24a",
         routeLabel: inRoute ? "Agregado a ruta" : "Agregar a ruta",
         routeHint: inRoute ? "Este punto ya está incluido como parada en tu ruta activa." : "Punto fijo · no requiere reclamar un anuncio.",
-        addToRoute: () => this.setState(s => ({ routePoints: s.routePoints.includes(p.id) ? s.routePoints : s.routePoints.concat(p.id) }))
+        addToRoute: () => this.setState(s => ({ routeIds:validStops(s.routeIds.concat(p.id)),optimized:false,loadedRoute:"" }))
       });
     });
     const visiblePoints = allPoints.filter(p => !this.state.hiddenTypes.includes(p.type));
@@ -1186,29 +1483,33 @@ class Component extends DCLogic {
       return { type, label: POINT_TYPES[type].label, active, opacity: active ? "1" : "0.4", decoration: active ? "none" : "line-through",
         toggle: () => this.setState(s => ({ hiddenTypes: s.hiddenTypes.includes(type) ? s.hiddenTypes.filter(t => t !== type) : s.hiddenTypes.concat(type), selectedPoint: null })) };
     });
-    const routePoints = this.state.routePoints.map(id => allPoints.find(p => p.id === id));
+    const savedRoutes = this.state.savedRoutes.map(r=>{
+      const metrics=routeStats(r.stops);
+      return Object.assign({},r,{ count:metrics.stops.length,distance:metrics.distanceLabel,minutes:metrics.minutes,
+        load:()=>this.setState({routeIds:r.stops.filter(id=>{const p=ROUTE_LOCATIONS.find(p=>p.id===id);return !p.pickup || !["Cancelado","Completado"].includes(this.delivery(p.pickup).state);}),loadedRoute:r.id,optimized:false,savedPanel:false,selectedPoint:null,search:"",mapMaterial:"",pointType:"",hiddenTypes:[],filters:{},routeNotice:"Ruta cargada: "+r.name}),
+        remove:()=>this.setState(s=>({savedRoutes:s.savedRoutes.filter(saved=>saved.id!==r.id),loadedRoute:s.loadedRoute===r.id?"":s.loadedRoute,routeNotice:"Ruta eliminada: "+r.name})) });
+    });
 
-    const pickupRows = [
-      { kg: "24 kg", material: "Cartón plegado", place: "Minimarket H&J · Magdalena", person: "Juan Flores", window: "HOY 14:00–18:00", state: "En camino", stateBg: "#eef2e4", stateFg: "#3f6224" },
-      { kg: "8,5 kg", material: "Botellas PET", place: "Bodega Olivo · San Isidro", person: "Camila Salazar", window: "MAÑ 09:00", state: "Confirmado", stateBg: "#eceee7", stateFg: "#5d6b5f" },
-      { kg: "9 kg", material: "Bolsas de plástico", place: "Casa · Jesús María", person: "Emilia Valencia", window: "AYER 17:00", state: "Completado", stateBg: "#eef2e4", stateFg: "#3f6224" },
-      { kg: "14 kg", material: "Vidrio mixto", place: "Rest. La Huerta · Lince", person: "Camila Salazar", window: "HACE 2 D", state: "Completado", stateBg: "#eef2e4", stateFg: "#3f6224" }
-    ];
-
-    // El espejo de pickupRows en la vista del generador: lo que publicó y quién
-    // lo recoge. `personFg` apaga el texto cuando nadie lo reclamó todavía.
-    const publicationRows = [
-      { kg: "30 kg", material: "Cartón plegado", posted: "Publicado hace 2 h", person: "Marco Quispe", personFg: "#3d4a3f", window: "HOY 14:00–18:00", state: "En camino", stateBg: "#eef2e4", stateFg: "#3f6224" },
-      { kg: "12 kg", material: "Papel de oficina", posted: "Publicado hace 5 h", person: "Rosa Huamán", personFg: "#3d4a3f", window: "HOY 16:00–19:00", state: "Reclamado", stateBg: "#eceee7", stateFg: "#5d6b5f" },
-      { kg: "6 kg", material: "Botellas PET", posted: "Publicado ayer", person: "Sin reclamar", personFg: "#8b9186", window: "MAÑ 09:00", state: "Esperando", stateBg: "#fdf3dd", stateFg: "#8a6a1f" },
-      { kg: "18 kg", material: "Vidrio mixto", posted: "Publicado hace 3 d", person: "Luis Ttito", personFg: "#3d4a3f", window: "HACE 2 D", state: "Completado", stateBg: "#eef2e4", stateFg: "#3f6224" }
-    ];
+    const pickupRows = PICKUPS.map(p => this.deliveryRow(p));
+    const publicationRows = PUBLICATIONS.map(p => this.deliveryRow(p));
+    const activePickups=pickupRows.filter(r=>!["Completado","Cancelado"].includes(r.state)).length;
+    const activePublications=publicationRows.filter(r=>!["Completado","Cancelado"].includes(r.state)).length;
+    const completedPickups=30+pickupRows.filter((r,i)=>r.state==="Completado" && PICKUPS[i].state!=="Completado").length;
+    const canceledPickups=1+pickupRows.filter(r=>r.state==="Cancelado").length;
+    const canceledPublications=1+publicationRows.filter(r=>r.state==="Cancelado").length;
 
     const threads = THREADS.map(t => Object.assign({}, t, {
       bg: this.state.thread === t.id ? "#f4f5f0" : "#ffffff",
-      select: () => this.setState({ thread: t.id })
+      select: () => this.setState({ thread: t.id, chatRow:((isGen ? PUBLICATIONS : PICKUPS).find(r=>r.thread===t.id)||{}).id,tracking:null })
     }));
     const activeThread = THREADS.filter(t => t.id === this.state.thread)[0] || THREADS[0];
+    const chatDelivery = this.delivery(this.state.chatRow) || this.delivery(((isGen ? PUBLICATIONS : PICKUPS).find(r=>r.thread===activeThread.id)||{}).id);
+    const actionDelivery = this.delivery(this.state.actionRow);
+    const lockedAction = !actionDelivery || ["Completado","Cancelado"].includes(actionDelivery.state);
+    const validActionRole = actionDelivery && actionDelivery.id.startsWith(isGen ? "g" : "r");
+    const tracked = this.delivery(this.state.tracking);
+    const trackingVisible = isGen && ["publicaciones","chats"].includes(active) && tracked && tracked.state==="En camino";
+    const confirmedDelivery = this.delivery(this.state.confirmedRow);
     const convo = (CONVOS[activeThread.id] || []).concat(this.state.extra[activeThread.id] || []);
     const messages = convo.map(m => ({
       text: m.text, time: m.time,
@@ -1268,12 +1569,13 @@ class Component extends DCLogic {
     return {
       navItems,
       pageTitle: HEADERS[active][0],
-      pageMeta: active === "mapa" ? ADS.length + " anuncios · " + RECYCLING_POINTS.length + " puntos de reciclaje · Lima" : HEADERS[active][1],
-      statusLabel: isGen ? "3 ANUNCIOS ACTIVOS" : "2 RECOJOS ACTIVOS",
+      pageMeta: active === "mapa" ? ADS.length + " anuncios · " + RECYCLING_POINTS.length + " puntos de reciclaje · Lima" : active==="recojos" ? activePickups+" activos · "+completedPickups+" completados este mes" : active==="publicaciones" ? activePublications+" activos · 12 completados este mes" : HEADERS[active][1],
+      statusLabel: isGen ? activePublications+" ANUNCIOS ACTIVOS" : activePickups+" RECOJOS ACTIVOS",
+      activePickups,activePublications,completedPickups,canceledPickups,canceledPublications,
       roleShort: isGen ? "GEN" : "REC",
       // El tab de destino ya implica el rol vía TAB_ROLE; dejarlo derivado
       // mantiene la URL en #mapa en vez de #reciclador/mapa.
-      toggleRole: () => this.setState({ role: null, tab: isGen ? "mapa" : "publicar" }),
+      toggleRole: () => this.navigate(isGen ? "mapa" : "publicar"),
 
       isMapa: active === "mapa",
       isRecojos: active === "recojos",
@@ -1283,10 +1585,10 @@ class Component extends DCLogic {
       isPerfil: active === "perfil",
       isSoporte: active === "soporte",
 
-      goChats: () => this.setState({ tab: "chats" }),
-      goSoporte: () => this.setState({ tab: "soporte" }),
+      goChats: () => this.navigate("chats", {role:this.role()}),
+      goSoporte: () => this.navigate("soporte", {role:this.role()}),
 
-      ads, filters, points, mapViews, pointTypeChips, pointLegend, routePoints,
+      ads, filters, points, mapViews, pointTypeChips, pointLegend,
       adPins: isPointsView ? allAds : ads,
       pointPins: isPointsView ? points : visiblePoints,
       isPointsView, isAdsView: !isPointsView,
@@ -1299,15 +1601,36 @@ class Component extends DCLogic {
       mapEmpty: isPointsView ? !points.length : !ads.length,
       emptyMessage: isPointsView ? "No encontramos puntos de reciclaje." : "No encontramos anuncios.",
       clearMapFilters: () => this.setState({ search: "", mapMaterial: "", pointType: "", hiddenTypes: [], filters: {}, selectedPoint: null }),
-      routeKg: "32,5 kg",
-      routeMeta: (2 + routePoints.length) + " paradas" + (routePoints.length ? " · " + routePoints.length + " puntos" : " · 6,1 km"),
+      routeKg: stats.kg.replace(".",","), routeMeta:stats.stops.length+" paradas",
+      routeDistance:stats.distanceLabel, routeMinutes:stats.minutes, routeTrace, routeStops,
+      routeCanScan:stats.stops.some(p=>p.pickup),
+      routeChat:()=>{const stop=stats.stops.find(p=>p.pickup);if(stop)this.deliveryRow(this.delivery(stop.pickup)).openChat();},
+      routeEmpty:!routeStops.length, routeNotice:this.state.routeNotice,
+      optimizeRoute:()=>this.setState(s=>({routeIds:optimizeStops(s.routeIds),optimized:true,routeNotice:s.routeIds.length?"Ruta optimizada por cercanía simulada.":"Agrega paradas para optimizar la ruta."})),
+      optimized:this.state.optimized, savedRoutes, savedEmpty:!savedRoutes.length, savedPanel:active==="mapa" && this.state.savedPanel,
+      openSaved:()=>this.setState({savedPanel:true,selectedPoint:null}), closeSaved:()=>this.setState({savedPanel:false}),
+      openSave:()=>this.setState({dialog:"guardar",routeName:"",routeDescription:"",formError:"",actionRow:null}),
+      saveRoute:()=>this.saveRoute(), saveDialog:active==="mapa" && this.state.dialog==="guardar",
+      routeName:this.state.routeName, routeDescription:this.state.routeDescription,
+      onRouteName:e=>this.setState({routeName:e.target.value}), onRouteDescription:e=>this.setState({routeDescription:e.target.value}),
+      actionDialog:validActionRole && ["reprogramar","cancelar"].includes(this.state.dialog), actionDelivery,
+      actionTitle:this.state.dialog==="cancelar"?"Cancelar recolección":"Reprogramar recolección",
+      isReschedule:this.state.dialog==="reprogramar", isCancel:this.state.dialog==="cancelar", lockedAction,
+      scheduleDate:this.state.scheduleDate, scheduleSlot:this.state.scheduleSlot, today:todayDate(), timeSlots:TIME_SLOTS.map(value=>({value})),
+      onScheduleDate:e=>this.setState({scheduleDate:e.target.value}),onScheduleSlot:e=>this.setState({scheduleSlot:e.target.value}),
+      reason:this.state.reason,onReason:e=>this.setState({reason:e.target.value}),confirmAction:()=>this.confirmAction(),
+      formError:this.state.formError, closeDialog:()=>this.closeDialog(),dialogKey:e=>this.modalKey(e,()=>this.closeDialog()),
+      trackingVisible,tracked,collectorIcon:{__html:ICONS.perfil},closeTracking:()=>this.setState({tracking:null}),
+      trackingKey:e=>this.modalKey(e,()=>this.setState({tracking:null})),
+      chatCanTrack:isGen && chatDelivery && chatDelivery.state==="En camino",chatTrack:()=>this.openTracking(chatDelivery.id),
+      chatDelivery, chatCanScan:!isGen && chatDelivery,
       pickups: pickupRows,
       publications: publicationRows,
 
       threads, messages,
-      activeName: activeThread.name,
-      activeInitials: activeThread.initials,
-      activeSub: activeThread.tag,
+      activeName: isGen && chatDelivery ? chatDelivery.person : activeThread.name,
+      activeInitials: isGen && chatDelivery ? chatDelivery.person.split(" ").map(w=>w[0]).slice(0,2).join("") : activeThread.initials,
+      activeSub: chatDelivery ? chatDelivery.kg+" · "+chatDelivery.material : activeThread.tag,
       draft: this.state.draft,
       onDraft: e => this.setState({ draft: e.target.value }),
       onDraftKey: e => { if (e.key === "Enter") send(); },
@@ -1328,12 +1651,18 @@ class Component extends DCLogic {
       publish: () => this.setState({ tab: "publicaciones" }),
 
       faqs, stars,
-      scannerOpen: this.state.scannerOpen,
+      scannerOpen:!isGen && actionDelivery && this.state.dialog==="qr" && actionDelivery.code,
+      scannerTitle:actionDelivery ? actionDelivery.place+" · "+actionDelivery.kg : "",
+      scannerClosed:lockedAction, manualCode:this.state.manualCode,
+      onManualCode:e=>this.setState({manualCode:e.target.value.toUpperCase(),formError:""}),
+      confirmManual:()=>this.confirmDelivery(true),manualKey:e=>{if(e.key==="Enter")this.confirmDelivery(true);},
+      confirmedTitle:confirmedDelivery ? confirmedDelivery.kg+" de "+confirmedDelivery.material+" recuperados" : "Entrega confirmada",
+      confirmedPerson:confirmedDelivery ? confirmedDelivery.person : "",
       rateOpen: this.state.rateOpen,
-      openScanner: () => this.setState({ scannerOpen: true }),
-      closeScanner: () => this.setState({ scannerOpen: false }),
+      openScanner: () => this.openAction("qr",active==="chats" && chatDelivery ? chatDelivery.id : (stats.stops.find(p=>p.pickup)||{}).pickup || "r1"),
+      closeScanner: () => this.closeDialog(),
       // La valoración arranca en cero cada vez, si no reaparece la anterior.
-      confirmDelivery: () => this.setState({ scannerOpen: false, rateOpen: true, rating: 0 }),
+      confirmDelivery: () => this.confirmDelivery(),
       closeRate: () => this.setState({ rateOpen: false, rating: 0 })
     };
   }
