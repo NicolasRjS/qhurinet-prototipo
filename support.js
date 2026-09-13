@@ -359,10 +359,24 @@
       query.set("defaultTab", tab);
       if (instance.state.role) query.set("role", instance.state.role);
       else query.delete("role");
+      if (instance.routeParams) {
+        var mapParams = instance.routeParams();
+        for (var key in mapParams) {
+          if (tab === "mapa" && mapParams[key]) query.set(key, mapParams[key]);
+          else query.delete(key);
+        }
+      }
       var next = location.pathname + "?" + query.toString();
       if (location.pathname + location.search + location.hash === next) return;
       try {
-        history[replace ? "replaceState" : "pushState"](null, "", next);
+        // Escribir en Buscar no crea una entrada de historial por carácter.
+        var previous = new URLSearchParams(location.search);
+        var searchChanged = previous.get("q") !== query.get("q");
+        previous.delete("q");
+        var withoutSearch = new URLSearchParams(query);
+        withoutSearch.delete("q");
+        var onlySearch = searchChanged && previous.toString() === withoutSearch.toString();
+        history[replace || onlySearch ? "replaceState" : "pushState"](null, "", next);
       } catch (e) {
         // file:// no deja tocar el historial (origen "null"). El deep link por
         // query sigue funcionando al abrir; solo no se refleja al navegar.
@@ -371,6 +385,8 @@
 
     function draw() {
       var snapshot = captureFocus(mount);
+      var mapList = document.getElementById("map-list");
+      var listScroll = mapList ? mapList.scrollTop : 0;
       var next = document.createElement("div");
       try {
         renderChildren(template, instance.renderVals(), next);
@@ -381,6 +397,8 @@
       mount.innerHTML = "";
       while (next.firstChild) mount.appendChild(next.firstChild);
       restoreFocus(mount, snapshot);
+      mapList = document.getElementById("map-list");
+      if (mapList) mapList.scrollTop = listScroll;
       syncUrl(!painted);
       painted = true;
     }
@@ -402,7 +420,8 @@
     window.addEventListener("popstate", function () {
       var route = readRoute();
       if (!route.tab) return syncUrl(true);
-      instance.setState({ tab: route.tab, role: route.role });
+      var mapState = instance.readMapRoute ? instance.readMapRoute(new URLSearchParams(location.search)) : {};
+      instance.setState(Object.assign({}, mapState, { tab: route.tab, role: route.role }));
     });
   }
 

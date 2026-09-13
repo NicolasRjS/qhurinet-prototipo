@@ -13,10 +13,9 @@ API. Todo corre en el navegador y nada persiste al recargar.
 > Spring Boot (backend) y Angular (frontend)**; este archivo es la referencia
 > visual que se le entrega a esa implementación.
 >
-> Por eso aquí no hay reglas de negocio ni cálculos: los números son de muestra
-> y están escritos a mano. Los clics cambian lo que se ve —un botón pasa a
-> "Reclamado", un chip se marca, se abre un modal— para poder recorrer los
-> flujos, nada más.
+> Los números son de muestra. La búsqueda y los filtros del mapa sí operan
+> sobre esos datos; los clics permiten reclamar anuncios, consultar lugares
+> fijos y agregar puntos a una ruta simulada, sin backend.
 
 Es un artboard de Claude Design (originalmente `QhuriNet Consola.dc.html`,
 renombrado a `index.html` para publicarlo): un solo archivo con marcado,
@@ -95,7 +94,7 @@ el generador publicó y quién lo está recogiendo.
 
 | Pestaña      | Qué muestra                                                                  |
 | ------------ | ---------------------------------------------------------------------------- |
-| **Mapa**     | Anuncios cercanos con filtros, mapa con la ruta activa y sus paradas           |
+| **Mapa**     | Anuncios y puntos fijos, búsqueda, filtros, detalle y ruta simulada           |
 | **Recojos**  | Tabla de recojos por estado, resumen del mes y desglose por material          |
 | **Chats**    | Hilos, conversación, y panel de la entrega en curso con el QR                 |
 | **Publicar** | Formulario de anuncio con vista previa en vivo y ubicación en el mapa          |
@@ -122,7 +121,7 @@ el rol en caliente.
 Todo vive en el `<script type="text/x-dc">` del final, en una clase
 `Component extends DCLogic`:
 
-- **Los datos de muestra** están en constantes al inicio: `ADS`, `THREADS`,
+- **Los datos de muestra** están en constantes al inicio: `ADS`, `RECYCLING_POINTS`, `POINT_TYPES`, `THREADS`,
   `CONVOS`, `FAQ_DATA`, `HEADERS`. Ahí se cambia el contenido de la maqueta.
 - `state` — lo único que se mueve al hacer clic: qué anuncios están
   `claimed`, qué hilo de chat está abierto, qué chips de material y filtros
@@ -133,10 +132,47 @@ Todo vive en el `<script type="text/x-dc">` del final, en una clase
   `{{ x }}` aparece en el marcado, `renderVals()` lo devuelve; no hay estado
   escondido.
 
-Las cifras son literales, no resultados: la tarjeta de ruta dice
-`32,5 kg · 2 paradas · 6,1 km` porque así está escrito. Reclamar un anuncio más
-no la recalcula, igual que las tablas de Recojos, Anuncios y Perfil son fijas.
-No queda ninguna aritmética en la maqueta: esa lógica le toca al backend.
+La ruta parte de `32,5 kg · 2 paradas · 6,1 km`. Agregar un punto fijo incorpora
+una parada, una sola vez, sin sumarle kilos. Al añadir puntos se sustituye el
+kilometraje de muestra por el número de puntos: no se calcula una ruta real.
+Reclamar otro anuncio mantiene el comportamiento previo; las tablas de Recojos,
+Anuncios y Perfil siguen siendo fijas.
+
+## Puntos de reciclaje y estados del mapa
+
+Los ocho lugares de `RECYCLING_POINTS` son ficticios, permanentes y no tienen
+cuenta ni conversación. Sus horarios, direcciones, distancias y calificaciones
+son datos simulados. Los anuncios de `ADS` siguen siendo publicaciones temporales.
+
+La lista lateral existente alterna **Anuncios / Puntos**. Los dos conjuntos de
+pines conviven: anuncios blancos con kilos; acopio verde cuadrado, bodega amarilla
+con forma de casa, reciclador terracota circular y municipal azul en rombo.
+La leyenda muestra u oculta cada tipo de punto, también en su lista.
+
+Buscar filtra nombre y dirección sin distinguir mayúsculas ni tildes. La búsqueda
+y los filtros afectan a la lista y a los pines de la vista activa. Se puede combinar
+un material, un tipo de punto y una búsqueda; pulsar otra vez el chip lo desactiva.
+**Plástico** incluye PET y plástico general; **PET** limita a PET. **Cerca de mí**
+usa hasta 5 km de distancia simulada. **+20 kg** y **Hoy** solo se aplican a anuncios.
+La X y Escape cierran el detalle. **Agregar a ruta** actualiza la ruta activa sin
+crear cuentas, chats ni anuncios.
+
+Se pueden copiar estos enlaces; los cambios se reflejan en la URL y funcionan
+con Atrás/Adelante. `role=reciclador` es opcional en la pestaña exclusiva `mapa`.
+
+- [Anuncios](https://nicolasrjs.github.io/qhurinet-prototipo/?role=reciclador&defaultTab=mapa&view=anuncios)
+- [Puntos](https://nicolasrjs.github.io/qhurinet-prototipo/?role=reciclador&defaultTab=mapa&view=puntos)
+- [Detalle del centro de acopio](https://nicolasrjs.github.io/qhurinet-prototipo/?defaultTab=mapa&view=puntos&point=p1)
+- [Municipales que aceptan vidrio](https://nicolasrjs.github.io/qhurinet-prototipo/?defaultTab=mapa&view=puntos&type=municipal&material=vidrio)
+- [Buscar por dirección](https://nicolasrjs.github.io/qhurinet-prototipo/?defaultTab=mapa&view=puntos&q=Salaverry)
+- [Sin coincidencias](https://nicolasrjs.github.io/qhurinet-prototipo/?defaultTab=mapa&view=puntos&q=sin-coincidencias)
+- [Acopios ocultos](https://nicolasrjs.github.io/qhurinet-prototipo/?defaultTab=mapa&view=puntos&hidden=acopio)
+
+Parámetros: `view=anuncios|puntos`, `point=p1`…`p8`,
+`material=carton|pet|vidrio|metal|plastico`, `type=acopio|bodega|reciclador|municipal`,
+`q=texto`, `hidden=tipos,separados,por,comas`, `near=1`, `heavy=1`, `today=1`.
+Los parámetros desconocidos de estas opciones se ignoran. Las paradas agregadas
+solo duran durante la sesión de la página; no se guardan en la URL.
 
 ## Assets
 
@@ -166,15 +202,15 @@ Requiere recargar la ventana (`Ctrl+Shift+P` → *Developer: Reload Window*).
 Nada de esto es un defecto pendiente: es trabajo que le corresponde a Angular y
 Spring Boot, y por eso aquí queda solo insinuado.
 
-- Los filtros del mapa y las pestañas de estado en Recojos y Anuncios **marcan
-  pero no filtran**. Muestran cómo se ve el control activo.
-- Las cifras de ruta, resumen del mes, historial y valoraciones son fijas.
+- Las pestañas de estado en Recojos y Anuncios **marcan pero no filtran**.
+- Los pesos y distancias de ruta, resumen del mes, historial y valoraciones son de muestra.
 - No hay mapa real, ni escáner de QR, ni llamada, ni envío de formularios: el
   escáner es un dibujo y "Confirmar entrega" solo abre el modal de valoración.
 - No hay validación de campos ni mensajes de error.
-- Nada persiste: al recargar, la maqueta vuelve a su estado inicial.
-- Los elementos interactivos son `<div onClick>`, no `<button>`, así que no
-  reciben foco por teclado. En Angular deben ser botones reales.
+- Al recargar solo se recuperan la navegación y los filtros/detalle del mapa
+  indicados en la URL. Reclamos, chats y puntos agregados a ruta se reinician.
+- Los controles anteriores usan `<div onClick>` y no reciben foco por teclado.
+  Los nuevos controles del mapa usan botones con estado accesible.
 
 ## Para quien lo implemente en Angular
 

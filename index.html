@@ -21,6 +21,16 @@
   input::placeholder, textarea::placeholder { color: #8b9186; }
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-thumb { background: #cdd2c4; border-radius: 4px; }
+  .map-button { font-family: inherit; color: inherit; cursor: pointer; }
+  .map-button:focus-visible { outline: 2px solid #4c7a2f; outline-offset: 3px; }
+  .map-button[data-ad-pin] { white-space: nowrap; }
+  .map-chip { font-size: 12px; padding: 5px 12px; border-radius: 20px; border: 1px solid #d8dcd2; }
+  .point-symbol { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; flex: none; }
+  .point-acopio { border-radius: 5px; background: #4c7a2f; color: #ffffff; }
+  .point-bodega { clip-path: polygon(50% 0, 100% 30%, 100% 100%, 0 100%, 0 30%); background: #e8b53a; color: #16281f; }
+  .point-reciclador { border-radius: 50%; background: #b1573f; color: #ffffff; }
+  .point-municipal { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); background: #5b7f9e; color: #ffffff; }
+  .material-tag { font-size: 11px; border: 1px solid #d9e3c3; border-radius: 20px; padding: 4px 9px; background: #eef2e4; color: #3f6224; }
 </style>
 </helmet>
 <div style="font-family: 'IBM Plex Sans', Helvetica, sans-serif; color: #16281f; background: #f4f5f0; min-height: 100vh; display: flex; min-width: 1240px;">
@@ -64,7 +74,7 @@
       <div style="flex: 1;"></div>
       <div style="display: flex; align-items: center; gap: 10px; background: #f4f5f0; border: 1px solid #e2e5dc; border-radius: 8px; padding: 9px 12px; width: 260px;">
         <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; color: #6c7a6e;"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M15.5 15.5 L21 21" stroke="currentColor" stroke-width="2"></path></svg>
-        <input type="text" placeholder="Buscar" style="flex: 1; border: none; background: transparent; outline: none; font-size: 13px; color: #16281f;"></input>
+        <input type="text" aria-label="Buscar" placeholder="Buscar" value="{{ search }}" onChange="{{ onSearch }}" style="flex: 1; min-width: 0; border: none; background: transparent; outline: none; font-size: 13px; color: #16281f;"></input>
       </div>
       <div style="display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; background: #eef2e4; border: 1px solid #d9e3c3; border-radius: 8px; padding: 9px 14px;">
         <div style="width: 8px; height: 8px; border-radius: 50%; background: #4c7a2f;"></div>
@@ -73,19 +83,39 @@
     </div>
 
     <sc-if value="{{ isMapa }}" hint-placeholder-val="{{ true }}">
-      <div style="flex: 1; display: grid; grid-template-columns: 400px 1fr; min-height: 0;">
+      <div style="flex: none; display: grid; grid-template-columns: 400px 1fr; height: calc(100vh - 76px); min-height: 640px;">
 
         <div style="border-right: 1px solid #e2e5dc; background: #ffffff; display: flex; flex-direction: column; min-height: 0;">
+          <div role="group" aria-label="Vista de la lista" style="padding: 16px 20px 0; display: flex; gap: 7px;">
+            <sc-for list="{{ mapViews }}" as="v">
+              <button type="button" class="map-button map-chip" aria-pressed="{{ v.active }}" onClick="{{ v.select }}" style="background: {{ v.bg }}; color: {{ v.fg }}; border-color: {{ v.border }};">{{ v.label }}</button>
+            </sc-for>
+          </div>
           <div style="padding: 16px 20px; border-bottom: 1px solid #eceee7; display: flex; flex-wrap: wrap; gap: 7px;">
             <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #6c7a6e; width: 100%; letter-spacing: 0.06em;">FILTROS</div>
             <sc-for list="{{ filters }}" as="f" hint-placeholder-count="5">
-              <div onClick="{{ f.toggle }}" style="font-size: 12px; padding: 5px 12px; border-radius: 20px; cursor: pointer; background: {{ f.bg }}; color: {{ f.fg }}; border: 1px solid {{ f.border }};">{{ f.label }}</div>
+              <button type="button" class="map-button map-chip" aria-pressed="{{ f.active }}" onClick="{{ f.toggle }}" style="background: {{ f.bg }}; color: {{ f.fg }}; border-color: {{ f.border }};">{{ f.label }}</button>
             </sc-for>
+            <sc-if value="{{ isPointsView }}">
+              <div style="width: 100%; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #6c7a6e; margin-top: 6px;">TIPO DE PUNTO</div>
+              <sc-for list="{{ pointTypeChips }}" as="f">
+                <button type="button" class="map-button map-chip" aria-pressed="{{ f.active }}" onClick="{{ f.toggle }}" style="background: {{ f.bg }}; color: {{ f.fg }}; border-color: {{ f.border }};">{{ f.label }}</button>
+              </sc-for>
+            </sc-if>
           </div>
 
-          <div style="flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; min-height: 0;">
+          <div id="map-list" style="flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; min-height: 0;">
+            <div role="status" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #6c7a6e;">{{ mapResultCount }}</div>
+            <sc-if value="{{ mapEmpty }}">
+              <div style="border: 1px solid #e2e5dc; border-radius: 12px; padding: 20px; font-size: 13px; line-height: 1.5;">
+                <div style="font-weight: 600;">{{ emptyMessage }}</div>
+                <div style="color: #5d6b5f; margin-top: 6px;">Prueba otro nombre o dirección, o ajusta los filtros.</div>
+                <button type="button" class="map-button map-chip" onClick="{{ clearMapFilters }}" style="background: #ffffff; margin-top: 12px;">Limpiar filtros</button>
+              </div>
+            </sc-if>
+            <sc-if value="{{ isAdsView }}">
             <sc-for list="{{ ads }}" as="a" hint-placeholder-count="4">
-              <div style="border: 1px solid {{ a.cardBorder }}; border-radius: 12px; padding: 16px; background: #ffffff; box-shadow: {{ a.cardShadow }};">
+              <div data-ad-card="{{ a.id }}" style="border: 1px solid {{ a.cardBorder }}; border-radius: 12px; padding: 16px; background: #ffffff; box-shadow: {{ a.cardShadow }};">
                 <div style="display: flex; align-items: flex-start; gap: 12px;">
                   <div style="width: 42px; height: 42px; border-radius: 10px; flex: none; background: {{ a.color }}; color: {{ a.iconFg }}; display: flex; align-items: center; justify-content: center;">
                     <div style="width: 24px; height: 24px;" dangerouslySetInnerHTML="{{ a.icon }}"></div>
@@ -111,6 +141,20 @@
                 </div>
               </div>
             </sc-for>
+            </sc-if>
+            <sc-if value="{{ isPointsView }}">
+              <sc-for list="{{ points }}" as="p">
+                <button type="button" class="map-button" data-point-card="{{ p.id }}" onClick="{{ p.open }}" style="text-align: left; border: 1px solid {{ p.cardBorder }}; border-radius: 12px; padding: 16px; background: #ffffff;">
+                  <span style="display: flex; align-items: center; gap: 12px;">
+                    <span class="point-symbol point-{{ p.type }}"><span style="width: 16px; height: 16px;" dangerouslySetInnerHTML="{{ p.icon }}"></span></span>
+                    <span><span style="display: block; font-size: 13px; font-weight: 600;">{{ p.name }}</span><span style="display: block; font-size: 11px; color: #5d6b5f; margin-top: 4px;">{{ p.typeLabel }}</span></span>
+                  </span>
+                  <span style="display: block; font-size: 12px; color: #5d6b5f; margin-top: 12px;">{{ p.district }}</span>
+                  <span style="display: flex; gap: 16px; margin-top: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 11px;"><span>{{ p.distanceLabel }}</span><span>★ {{ p.ratingLabel }} / 5</span></span>
+                  <span style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px;"><sc-for list="{{ p.tags }}" as="m"><span class="material-tag">{{ m.label }}</span></sc-for></span>
+                </button>
+              </sc-for>
+            </sc-if>
           </div>
         </div>
 
@@ -136,33 +180,22 @@
             <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 8px; padding: 8px 14px; font-size: 12px; color: #3d4a3f; cursor: pointer;">Rutas guardadas</div>
           </div>
 
-          <div style="position: absolute; top: 64px; right: 348px; bottom: 92px; left: 0;">
-          <div style="position: absolute; left: 22.5%; top: 70.5%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 4px;">
-            <div style="background: #16281f; color: #a3d24a; font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 3px 8px; border-radius: 4px;">TÚ</div>
-            <div style="width: 18px; height: 18px; border-radius: 50%; background: #16281f; border: 3px solid #ffffff;"></div>
-          </div>
-          <div style="position: absolute; left: 43.5%; top: 54%; transform: translate(-50%, -100%); background: #ffffff; border: 1px solid #16281f; border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 0 #16281f;">
-            <div style="width: 26px; height: 26px; border-radius: 7px; background: #e8b53a; color: #16281f; display: flex; align-items: center; justify-content: center; flex: none;">
-              <svg viewBox="0 0 24 24" style="width: 16px; height: 16px;" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.2 L20.3 8.1 V16 L12 19.9 L3.7 16 V8.1 Z"></path><path d="M3.7 8.1 L12 12 L20.3 8.1"></path><path d="M12 12 V19.9"></path></svg>
-            </div>
-            <div>
-              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600;">24 kg</div>
-              <div style="font-size: 10px; color: #5d6b5f;">Parada 1 · Cartón</div>
-            </div>
-          </div>
-          <div style="position: absolute; left: 63.5%; top: 34%; transform: translate(-50%, -100%); background: #ffffff; border: 1px solid #e2e5dc; border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 10px;">
-            <div style="width: 26px; height: 26px; border-radius: 7px; background: #4c7a2f; color: #ffffff; display: flex; align-items: center; justify-content: center; flex: none;">
-              <svg viewBox="0 0 24 24" style="width: 16px; height: 16px;" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3.6 H14 V5.8 C14 7.1 16 7.9 16 11 V18.8 A1.6 1.6 0 0 1 14.4 20.4 H9.6 A1.6 1.6 0 0 1 8 18.8 V11 C8 7.9 10 7.1 10 5.8 Z"></path><path d="M8 13 H16"></path></svg>
-            </div>
-            <div>
-              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600;">8,5 kg</div>
-              <div style="font-size: 10px; color: #5d6b5f;">Parada 2 · PET</div>
-            </div>
-          </div>
-          <div style="position: absolute; left: 79%; top: 76%; transform: translate(-50%, -50%); width: 34px; height: 34px; border-radius: 50%; background: #ffffff; border: 2px solid #5b7f9e; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #16281f;">31</div>
+          <div aria-label="Pines del mapa" style="position: absolute; top: 64px; right: 348px; bottom: 175px; left: 0;">
+            <div style="position: absolute; left: 12%; top: 92%; transform: translate(-50%, -50%); font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #16281f;">● TÚ</div>
+            <sc-for list="{{ adPins }}" as="a">
+              <button type="button" class="map-button" data-ad-pin="{{ a.id }}" onClick="{{ a.show }}" title="{{ a.pinLabel }}" aria-label="{{ a.pinLabel }}" style="position: absolute; left: {{ a.x }}%; top: {{ a.y }}%; transform: translate(-50%, -50%); background: #ffffff; border: 1px solid {{ a.cardBorder }}; border-radius: 10px; padding: 7px 9px; display: flex; align-items: center; gap: 6px; box-shadow: {{ a.cardShadow }};">
+                <span style="width: 18px; height: 18px; color: {{ a.color }};" dangerouslySetInnerHTML="{{ a.icon }}"></span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600;">{{ a.kg }}</span>
+              </button>
+            </sc-for>
+            <sc-for list="{{ pointPins }}" as="p">
+              <button type="button" class="map-button" data-point-pin="{{ p.id }}" data-point-type="{{ p.type }}" title="{{ p.pinLabel }}" aria-label="{{ p.pinLabel }}" onClick="{{ p.open }}" style="position: absolute; left: {{ p.x }}%; top: {{ p.y }}%; transform: translate(-50%, -50%); padding: 4px; background: #ffffff; border: 1px solid {{ p.cardBorder }}; border-radius: 8px;">
+                <span class="point-symbol point-{{ p.type }}"><span style="width: 16px; height: 16px;" dangerouslySetInnerHTML="{{ p.icon }}"></span></span>
+              </button>
+            </sc-for>
           </div>
 
-          <div style="position: absolute; right: 18px; top: 18px; width: 320px; background: #ffffff; border: 1px solid #e2e5dc; border-radius: 14px; overflow: hidden;">
+          <div style="position: absolute; right: 18px; top: 18px; width: 320px; max-height: calc(100% - 170px); overflow-y: auto; background: #ffffff; border: 1px solid #e2e5dc; border-radius: 14px;">
             <div style="background: #16281f; padding: 14px 18px;">
               <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #a3d24a; letter-spacing: 0.08em;">RUTA ACTIVA</div>
               <div style="display: flex; align-items: baseline; gap: 10px; margin-top: 6px;">
@@ -188,6 +221,12 @@
                   </div>
                 </div>
               </div>
+              <sc-for list="{{ routePoints }}" as="p">
+                <div data-route-point="{{ p.id }}" style="border-top: 1px solid #eceee7; padding-top: 10px;">
+                  <button type="button" class="map-button" onClick="{{ p.open }}" style="border: none; padding: 0; background: transparent; text-align: left; font-size: 13px; font-weight: 600;">{{ p.name }}</button>
+                  <div style="font-size: 11px; color: #5d6b5f; margin-top: 3px;">{{ p.typeLabel }} · {{ p.district }}</div>
+                </div>
+              </sc-for>
               <div style="height: 1px; background: #eceee7;"></div>
               <div style="display: flex; gap: 8px;">
                 <div onClick="{{ openScanner }}" style="flex: 1; background: #16281f; color: #ffffff; font-size: 13px; font-weight: 600; text-align: center; padding: 11px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
@@ -213,11 +252,38 @@
             </div>
           </div>
 
-          <div style="position: absolute; left: 18px; bottom: 18px; background: #ffffff; border: 1px solid #e2e5dc; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
-            <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: #3d4a3f;"><div style="width: 10px; height: 10px; border-radius: 3px; background: #4c7a2f;"></div>Centro de acopio</div>
-            <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: #3d4a3f;"><div style="width: 10px; height: 10px; border-radius: 3px; background: #e8b53a;"></div>Comercio / bodega</div>
-            <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: #3d4a3f;"><div style="width: 10px; height: 10px; border-radius: 3px; background: #5b7f9e;"></div>Punto municipal</div>
+          <div role="group" aria-label="Tipos visibles en el mapa" style="position: absolute; left: 18px; bottom: 18px; background: #ffffff; border: 1px solid #e2e5dc; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
+            <sc-for list="{{ pointLegend }}" as="l">
+              <button type="button" class="map-button" data-legend="{{ l.type }}" aria-pressed="{{ l.active }}" onClick="{{ l.toggle }}" style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: #3d4a3f; border: none; padding: 0; background: transparent; opacity: {{ l.opacity }}; text-decoration: {{ l.decoration }};">
+                <span class="point-symbol point-{{ l.type }}" style="width: 12px; height: 12px;"></span>{{ l.label }}
+              </button>
+            </sc-for>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: #5d6b5f;"><span style="width: 12px; height: 10px; border: 1px solid #16281f; border-radius: 3px;"></span>Anuncio de material · kg</div>
           </div>
+          <sc-if value="{{ pointDetail }}">
+            <aside aria-label="Detalle del punto de reciclaje" onKeyDown="{{ onPointKey }}" style="position: absolute; z-index: 5; right: 0; top: 0; bottom: 0; width: 320px; background: #ffffff; border-left: 1px solid #e2e5dc; padding: 20px; display: flex; flex-direction: column; gap: 18px; overflow-y: auto;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e;">PUNTO DE RECICLAJE</div>
+                <button type="button" id="close-point" class="map-button" aria-label="Cerrar detalle del punto" onClick="{{ closePoint }}" style="background: #ffffff; border: 1px solid #d8dcd2; border-radius: 7px; width: 30px; height: 30px; font-size: 20px;">×</button>
+              </div>
+              <div>
+                <div class="point-symbol point-{{ pointDetail.type }}" style="margin-bottom: 12px;"><div style="width: 16px; height: 16px;" dangerouslySetInnerHTML="{{ pointDetail.icon }}"></div></div>
+                <div style="font-size: 18px; font-weight: 600;">{{ pointDetail.name }}</div>
+                <div style="font-size: 12px; color: #5d6b5f; margin-top: 6px;">{{ pointDetail.typeLabel }}</div>
+              </div>
+              <div style="border: 1px solid #e2e5dc; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 16px; font-size: 12.5px; line-height: 1.5;">
+                <div><div style="font-weight: 600;">Dirección</div><div style="color: #5d6b5f;">{{ pointDetail.address }} · {{ pointDetail.district }}</div></div>
+                <div><div style="font-weight: 600;">Horario de atención</div><div style="color: #5d6b5f;">{{ pointDetail.hours }}</div></div>
+                <div style="display: flex; justify-content: space-between;"><span>Calificación promedio</span><span style="font-family: 'IBM Plex Mono', monospace;">★ {{ pointDetail.ratingLabel }} / 5</span></div>
+              </div>
+              <div>
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e;">MATERIALES ACEPTADOS</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px;"><sc-for list="{{ pointDetail.tags }}" as="m"><span class="material-tag">{{ m.label }}</span></sc-for></div>
+              </div>
+              <button type="button" class="map-button" aria-disabled="{{ pointDetail.inRoute }}" onClick="{{ pointDetail.addToRoute }}" style="background: {{ pointDetail.routeBg }}; color: #16281f; border: none; font-size: 13px; font-weight: 600; padding: 11px; border-radius: 8px;">{{ pointDetail.routeLabel }}</button>
+              <div role="status" style="font-size: 11.5px; line-height: 1.5; color: #5d6b5f;">{{ pointDetail.routeHint }}</div>
+            </aside>
+          </sc-if>
         </div>
       </div>
     </sc-if>
@@ -902,6 +968,37 @@ const HEADERS = {
   soporte: ["Soporte", "Respuesta promedio 12 min · llamada 24/7"]
 };
 
+// Lugares fijos ficticios: no son anuncios ni usuarios. Coordenadas relativas
+// al área útil del mapa y distancias de muestra desde la ubicación del reciclador.
+MATERIALS.plastico = { label: "Plástico", color: "#4c7a2f", fg: "#ffffff", icon: MATERIALS.pet.icon };
+const POINT_TYPES = {
+  acopio: { label: "Centro de acopio", icon: svg('<path d="M3 10 L12 4 L21 10 V20 H3 Z"/><path d="M8 20 V13 H16 V20"/>') },
+  bodega: { label: "Comercio o bodega", icon: svg('<path d="M4 10 H20 L18 5 H6 Z M5 10 V20 H19 V10 M9 20 V14 H15 V20"/>') },
+  reciclador: { label: "Reciclador", icon: ICONS.perfil },
+  municipal: { label: "Punto municipal", icon: svg('<path d="M4 9 L12 4 L20 9 Z M6 11 V18 M12 11 V18 M18 11 V18 M4 20 H20"/>') }
+};
+const RECYCLING_POINTS = [
+  { id: "p1", name: "Acopio Verde Magdalena", type: "acopio", address: "Av. Brasil 2860", district: "Magdalena del Mar", x: 17, y: 14, hours: "Lun–sáb · 08:00–18:00", rating: 4.8, distance: 1.4, materials: ["carton", "pet", "vidrio", "metal", "plastico"] },
+  { id: "p2", name: "Bodega Las Palmeras", type: "bodega", address: "Av. Dos de Mayo 620", district: "San Isidro", x: 48, y: 12, hours: "Lun–dom · 07:00–21:00", rating: 4.5, distance: 2.1, materials: ["carton", "pet"] },
+  { id: "p3", name: "Reciclador El Progreso", type: "reciclador", address: "Jr. Risso 410", district: "Lince", x: 82, y: 16, hours: "Lun–sáb · 09:00–17:00", rating: 4.7, distance: 3.2, materials: ["carton", "metal", "plastico"] },
+  { id: "p4", name: "Punto Verde Jesús María", type: "municipal", address: "Av. Salaverry 1200", district: "Jesús María", x: 17, y: 43, hours: "Lun–dom · 08:00–20:00", rating: 4.6, distance: 2.7, materials: ["pet", "vidrio", "plastico"] },
+  { id: "p5", name: "Acopio Circular Pueblo Libre", type: "acopio", address: "Av. La Marina 850", district: "Pueblo Libre", x: 83, y: 45, hours: "Lun–sáb · 08:30–17:30", rating: 4.9, distance: 3.8, materials: ["carton", "pet", "metal"] },
+  { id: "p6", name: "Bodega La Esquina Verde", type: "bodega", address: "Av. Universitaria 540", district: "San Miguel", x: 19, y: 73, hours: "Lun–dom · 08:00–22:00", rating: 4.3, distance: 4.9, materials: ["vidrio", "plastico"] },
+  { id: "p7", name: "Reciclador Surquillo Limpio", type: "reciclador", address: "Av. Angamos Este 1050", district: "Surquillo", x: 49, y: 74, hours: "Lun–sáb · 07:00–16:00", rating: 4.7, distance: 6.2, materials: ["carton", "pet", "metal", "plastico"] },
+  { id: "p8", name: "Punto Municipal Miraflores", type: "municipal", address: "Av. La Paz 900", district: "Miraflores", x: 83, y: 94, hours: "Mar–dom · 09:00–19:00", rating: 4.8, distance: 5.6, materials: ["carton", "pet", "vidrio"] }
+];
+const MAP_MATERIALS = ["carton", "pet", "vidrio", "metal", "plastico"];
+const normalizeSearch = text => String(text).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+const readMapState = props => ({
+  mapView: props.view === "puntos" ? "puntos" : "anuncios",
+  search: props.q || "",
+  mapMaterial: MAP_MATERIALS.includes(props.material) ? props.material : "",
+  pointType: Object.keys(POINT_TYPES).includes(props.type) ? props.type : "",
+  hiddenTypes: (props.hidden || "").split(",").filter(t => Object.keys(POINT_TYPES).includes(t)),
+  selectedPoint: RECYCLING_POINTS.some(p => p.id === props.point) ? props.point : null,
+  filters: { "Cerca de mí": props.near === "1", "+20 kg": props.heavy === "1", "Hoy": props.today === "1" }
+});
+
 // a1 y a2 nacen reclamados: son las dos paradas que ya aparecen en la ruta
 // activa y en Mis recojos.
 const ADS = [
@@ -958,7 +1055,8 @@ class Component extends DCLogic {
     // que ?defaultTab=publicar siga abriendo Publicar aunque role sea el
     // "reciclador" por defecto. MODO lo sigue cambiando en caliente.
     role: TAB_ROLE[(this.props || {}).defaultTab || "mapa"] ? null : ((this.props || {}).role || null),
-    filters: { "Cerca de mí": true },
+    ...readMapState(this.props || {}),
+    routePoints: [],
     claimed: { a1: true, a2: true }, // anuncios reclamados (ids de ADS)
     thread: "t1", draft: "", extra: {},
     scannerOpen: false, rateOpen: false, rating: 0,
@@ -970,6 +1068,30 @@ class Component extends DCLogic {
 
   // Rol explícito si el usuario ya lo cambió; si no, el que corresponda al tab.
   role() { return this.state.role || TAB_ROLE[this.tab()] || "reciclador"; }
+
+  // El runtime conserva estos estados al copiar enlaces y al usar Atrás/Adelante.
+  readMapRoute(query) { return readMapState(Object.fromEntries(query)); }
+  routeParams() {
+    return { view: this.state.mapView, q: this.state.search, material: this.state.mapMaterial,
+      type: this.state.pointType, hidden: this.state.hiddenTypes.join(","), point: this.state.selectedPoint,
+      near: this.state.filters["Cerca de mí"] ? "1" : "", heavy: this.state.filters["+20 kg"] ? "1" : "",
+      today: this.state.filters.Hoy ? "1" : "" };
+  }
+
+  openPoint(id) {
+    this.setState({ selectedPoint: id });
+    // setState repinta en una microtarea; enfocar después el control de cierre.
+    Promise.resolve().then(() => { const close = document.getElementById("close-point"); if (close) close.focus({ preventScroll: true }); });
+  }
+
+  closePoint() {
+    const id = this.state.selectedPoint;
+    this.setState({ selectedPoint: null });
+    Promise.resolve().then(() => {
+      const trigger = document.querySelector('[data-point-card="' + id + '"]') || document.querySelector('[data-point-pin="' + id + '"]');
+      if (trigger) trigger.focus({ preventScroll: true });
+    });
+  }
 
   chip(label, on, activeBg, activeFg) {
     return {
@@ -1002,11 +1124,14 @@ class Component extends DCLogic {
 
     // El anuncio destacado es el primero que todavía se puede reclamar.
     const featuredId = (ADS.filter(a => !this.state.claimed[a.id])[0] || {}).id;
-    const ads = ADS.map(a => {
+    const allAds = ADS.map((a, i) => {
       const claimed = !!this.state.claimed[a.id];
       const featured = a.id === featuredId;
       const mat = MATERIALS[a.mat];
       return Object.assign({}, a, {
+        x: [48, 68, 83, 49][i], y: [40, 29, 72, 95][i],
+        pinLabel: "Anuncio: " + a.material + " · " + a.place,
+        show: () => { this.setState({ mapView: "anuncios", search: a.place.split(" · ")[0], mapMaterial: "", selectedPoint: null, filters: {} }); },
         color: mat.color,
         iconFg: mat.fg,
         icon: { __html: mat.icon },
@@ -1019,6 +1144,49 @@ class Component extends DCLogic {
         claim: claimed ? () => {} : () => this.setState(s => ({ claimed: Object.assign({}, s.claimed, { [a.id]: true }) }))
       });
     });
+
+    const isPointsView = this.state.mapView === "puntos";
+    const query = normalizeSearch(this.state.search);
+    const material = this.state.mapMaterial;
+    // Plástico incluye PET; PET por separado permite limitar a esa categoría.
+    const acceptsMaterial = mats => !material || mats.includes(material) || (material === "plastico" && mats.includes("pet"));
+    const ads = allAds.filter(a => normalizeSearch(a.place + " " + a.material).includes(query)
+      && acceptsMaterial([a.mat])
+      && (!this.state.filters["Cerca de mí"] || parseFloat(a.dist.replace(",", ".")) <= 5)
+      && (!this.state.filters["+20 kg"] || parseFloat(a.kg.replace(",", ".")) > 20)
+      && (!this.state.filters.Hoy || a.window.startsWith("HOY")));
+    const allPoints = RECYCLING_POINTS.map(p => {
+      const inRoute = this.state.routePoints.includes(p.id);
+      return Object.assign({}, p, {
+        typeLabel: POINT_TYPES[p.type].label, icon: { __html: POINT_TYPES[p.type].icon },
+        pinLabel: POINT_TYPES[p.type].label + ": " + p.name,
+        distanceLabel: p.distance.toFixed(1).replace(".", ",") + " KM",
+        ratingLabel: p.rating.toFixed(1).replace(".", ","),
+        tags: p.materials.map(k => ({ label: k === "pet" ? "PET" : MATERIALS[k].label })),
+        cardBorder: this.state.selectedPoint === p.id ? "#16281f" : inRoute ? "#4c7a2f" : "#e2e5dc",
+        open: () => this.openPoint(p.id), inRoute,
+        routeBg: inRoute ? "#eef2e4" : "#a3d24a",
+        routeLabel: inRoute ? "Agregado a ruta" : "Agregar a ruta",
+        routeHint: inRoute ? "Este punto ya está incluido como parada en tu ruta activa." : "Punto fijo · no requiere reclamar un anuncio.",
+        addToRoute: () => this.setState(s => ({ routePoints: s.routePoints.includes(p.id) ? s.routePoints : s.routePoints.concat(p.id) }))
+      });
+    });
+    const visiblePoints = allPoints.filter(p => !this.state.hiddenTypes.includes(p.type));
+    const points = visiblePoints.filter(p => normalizeSearch(p.name + " " + p.address + " " + p.district).includes(query)
+      && acceptsMaterial(p.materials) && (!this.state.pointType || p.type === this.state.pointType)
+      && (!this.state.filters["Cerca de mí"] || p.distance <= 5));
+    const mapViews = ["anuncios", "puntos"].map(view => Object.assign(this.chip(view === "puntos" ? "Puntos" : "Anuncios", this.state.mapView === view), {
+      active: this.state.mapView === view, select: () => this.setState({ mapView: view, selectedPoint: null })
+    }));
+    const pointTypeChips = ["", ...Object.keys(POINT_TYPES)].map(type => Object.assign(this.chip(type ? POINT_TYPES[type].label : "Todos", this.state.pointType === type), {
+      active: this.state.pointType === type, toggle: () => this.setState({ pointType: this.state.pointType === type ? "" : type })
+    }));
+    const pointLegend = Object.keys(POINT_TYPES).map(type => {
+      const active = !this.state.hiddenTypes.includes(type);
+      return { type, label: POINT_TYPES[type].label, active, opacity: active ? "1" : "0.4", decoration: active ? "none" : "line-through",
+        toggle: () => this.setState(s => ({ hiddenTypes: s.hiddenTypes.includes(type) ? s.hiddenTypes.filter(t => t !== type) : s.hiddenTypes.concat(type), selectedPoint: null })) };
+    });
+    const routePoints = this.state.routePoints.map(id => allPoints.find(p => p.id === id));
 
     const pickupRows = [
       { kg: "24 kg", material: "Cartón plegado", place: "Minimarket H&J · Magdalena", person: "Juan Flores", window: "HOY 14:00–18:00", state: "En camino", stateBg: "#eef2e4", stateFg: "#3f6224" },
@@ -1073,11 +1241,14 @@ class Component extends DCLogic {
     const previewMat = MATERIALS[pickedMats[0]] || MATERIALS.carton;
 
 
-    const filters = ["Cerca de mí", "Cartón", "Plástico", "+20 kg", "Hoy"].map(l =>
+    const filters = (isPointsView ? ["Cerca de mí"] : ["Cerca de mí", "+20 kg", "Hoy"]).map(l =>
       Object.assign(this.chip(l, !!this.state.filters[l]), {
+        active: !!this.state.filters[l],
         toggle: () => this.setState(s => ({ filters: Object.assign({}, s.filters, { [l]: !s.filters[l] }) }))
       })
-    );
+    ).concat(MAP_MATERIALS.map(k => Object.assign(this.chip(k === "pet" ? "PET" : MATERIALS[k].label, material === k), {
+      active: material === k, toggle: () => this.setState({ mapMaterial: material === k ? "" : k })
+    })));
 
     const faqs = FAQ_DATA.map((f, i) => ({
       q: f.q, a: f.a,
@@ -1097,7 +1268,7 @@ class Component extends DCLogic {
     return {
       navItems,
       pageTitle: HEADERS[active][0],
-      pageMeta: HEADERS[active][1],
+      pageMeta: active === "mapa" ? ADS.length + " anuncios · " + RECYCLING_POINTS.length + " puntos de reciclaje · Lima" : HEADERS[active][1],
       statusLabel: isGen ? "3 ANUNCIOS ACTIVOS" : "2 RECOJOS ACTIVOS",
       roleShort: isGen ? "GEN" : "REC",
       // El tab de destino ya implica el rol vía TAB_ROLE; dejarlo derivado
@@ -1115,9 +1286,21 @@ class Component extends DCLogic {
       goChats: () => this.setState({ tab: "chats" }),
       goSoporte: () => this.setState({ tab: "soporte" }),
 
-      ads, filters,
+      ads, filters, points, mapViews, pointTypeChips, pointLegend, routePoints,
+      adPins: isPointsView ? allAds : ads,
+      pointPins: isPointsView ? points : visiblePoints,
+      isPointsView, isAdsView: !isPointsView,
+      search: this.state.search,
+      onSearch: e => this.setState({ search: e.target.value, selectedPoint: null }),
+      pointDetail: allPoints.find(p => p.id === this.state.selectedPoint),
+      closePoint: () => this.closePoint(),
+      onPointKey: e => { if (e.key === "Escape") this.closePoint(); },
+      mapResultCount: (isPointsView ? points.length + " puntos" : ads.length + " anuncios") + " encontrados",
+      mapEmpty: isPointsView ? !points.length : !ads.length,
+      emptyMessage: isPointsView ? "No encontramos puntos de reciclaje." : "No encontramos anuncios.",
+      clearMapFilters: () => this.setState({ search: "", mapMaterial: "", pointType: "", hiddenTypes: [], filters: {}, selectedPoint: null }),
       routeKg: "32,5 kg",
-      routeMeta: "2 paradas · 6,1 km",
+      routeMeta: (2 + routePoints.length) + " paradas" + (routePoints.length ? " · " + routePoints.length + " puntos" : " · 6,1 km"),
       pickups: pickupRows,
       publications: publicationRows,
 
