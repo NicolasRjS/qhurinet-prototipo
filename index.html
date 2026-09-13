@@ -1275,7 +1275,7 @@ const svg = d => '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none
 const MATERIALS = {
   carton: { label: "Cartón", color: "#e8b53a", fg: "#16281f", icon: svg('<path d="M12 4.2 L20.3 8.1 V16 L12 19.9 L3.7 16 V8.1 Z"/><path d="M3.7 8.1 L12 12 L20.3 8.1"/><path d="M12 12 V19.9"/><path d="M7.8 6.15 L16.2 10.05"/>') },
   papel: { label: "Papel", color: "#c98f3c", fg: "#16281f", icon: svg('<path d="M6.2 3.6 H13.8 L18.4 8.2 V20.4 H6.2 Z"/><path d="M13.8 3.6 V8.2 H18.4"/><path d="M9 12.6 H15.4"/><path d="M9 16 H13.2"/>') },
-  pet: { label: "Plástico PET", color: "#4c7a2f", fg: "#ffffff", icon: svg('<path d="M10 3.6 H14 V5.8 C14 7.1 16 7.9 16 11 V18.8 A1.6 1.6 0 0 1 14.4 20.4 H9.6 A1.6 1.6 0 0 1 8 18.8 V11 C8 7.9 10 7.1 10 5.8 Z"/><path d="M8 12.8 H16"/><path d="M8 15.2 H16"/>') },
+  pet: { label: "PET", color: "#4c7a2f", fg: "#ffffff", icon: svg('<path d="M10 3.6 H14 V5.8 C14 7.1 16 7.9 16 11 V18.8 A1.6 1.6 0 0 1 14.4 20.4 H9.6 A1.6 1.6 0 0 1 8 18.8 V11 C8 7.9 10 7.1 10 5.8 Z"/><path d="M8 12.8 H16"/><path d="M8 15.2 H16"/>') },
   vidrio: { label: "Vidrio", color: "#5b7f9e", fg: "#ffffff", icon: svg('<path d="M9 3.6 H15 V7.2 L17 10.2 V18.8 A1.6 1.6 0 0 1 15.4 20.4 H8.6 A1.6 1.6 0 0 1 7 18.8 V10.2 L9 7.2 Z"/><path d="M7 12.6 H17"/>') },
   metal: { label: "Metal", color: "#b1573f", fg: "#ffffff", icon: svg('<ellipse cx="12" cy="5.8" rx="4.8" ry="2.2"/><path d="M7.2 5.8 V18.2 A4.8 2.2 0 0 0 16.8 18.2 V5.8"/><path d="M7.2 9.6 H16.8"/>') },
   electronicos: { label: "Electrónicos", color: "#6b5b95", fg: "#ffffff", icon: svg('<rect x="7.2" y="7.2" width="9.6" height="9.6" rx="1.6"/><rect x="10.2" y="10.2" width="3.6" height="3.6" rx="0.6"/><path d="M9.8 7.2 V4.2 M14.2 7.2 V4.2 M9.8 16.8 V19.8 M14.2 16.8 V19.8 M7.2 9.8 H4.2 M7.2 14.2 H4.2 M16.8 9.8 H19.8 M16.8 14.2 H19.8"/>') },
@@ -1333,7 +1333,7 @@ const ADS = [
 ];
 
 // Orden de los chips de material en Publicar.
-const MAT_ORDER = ["carton", "papel", "pet", "vidrio", "metal", "electronicos"];
+const MAT_ORDER = ["carton", "pet", "vidrio", "metal", "plastico"];
 
 // Pestañas que solo existen en un rol. Sirven para deducir el rol inicial a
 // partir de `defaultTab`: sin esto, defaultTab "publicar" caía al mapa porque
@@ -1431,11 +1431,10 @@ const PAY_OPTIONS = ["Sin pago", "Yape", "Efectivo"];
 // Sugerencia de material por palabras clave: simula el clasificador del sistema.
 const SUGGEST_RULES = [
   { mat: "carton", confidence: 92, keys: ["carton", "caja", "cajas", "corrugado"] },
-  { mat: "papel", confidence: 88, keys: ["papel", "hojas", "oficina", "periodico", "revista"] },
-  { mat: "pet", confidence: 90, keys: ["botella", "botellas", "pet", "plastico", "gaseosa"] },
+  { mat: "pet", confidence: 90, keys: ["botella", "botellas", "pet", "gaseosa"] },
   { mat: "vidrio", confidence: 91, keys: ["vidrio", "frasco", "frascos", "vino", "cerveza"] },
   { mat: "metal", confidence: 86, keys: ["lata", "latas", "metal", "aluminio", "fierro", "chatarra"] },
-  { mat: "electronicos", confidence: 84, keys: ["electr", "celular", "cable", "computador", "laptop", "monitor", "tv"] }
+  { mat: "plastico", confidence: 85, keys: ["plastico", "bolsa", "bolsas", "envase", "envases", "tapa", "tapas"] }
 ];
 const NOTIFICATIONS = {
   reciclador: [
@@ -1466,6 +1465,16 @@ const cleanText = (v, n) => typeof v === "string" ? v.slice(0, n) : "";
 // perfil, documentos subidos, métodos de pago, anuncios publicados, tickets y
 // notificaciones leídas. Las fotos (data URL) no caben en un enlace y se quedan
 // solo en memoria.
+// Anuncios publicados desde el formulario (viajan en `pubs`). Se convierten en
+// filas con la misma forma que PUBLICATIONS para que delivery(), el menú de
+// acciones y las actualizaciones por fila funcionen igual que en las precargadas.
+const parsePubs = props => (Array.isArray(parseJson(props.pubs, [])) ? parseJson(props.pubs, []) : []).filter(p => p && Array.isArray(p.mats))
+  .map((p, i) => ({ id: "n" + (i + 1), mats: p.mats.filter(k => MAT_ORDER.includes(k)), kg: cleanText(p.kg, 8), window: cleanText(p.window, 40), pay: PAY_OPTIONS.includes(p.pay) ? p.pay : "Sin pago", note: cleanText(p.note, 240) }))
+  .filter(p => p.mats.length && p.kg);
+const pubRecord = p => ({ id: p.id, thread: "t3", address: "Av. Pershing 345, Magdalena", kg: p.kg, material: p.mats.map(k => MATERIALS[k].label).join(", "),
+  posted: "Publicado ahora · " + p.pay, person: "Sin reclamar", personFg: "#8b9186", window: p.window, state: "Esperando", stateBg: "#fdf3dd", stateFg: "#8a6a1f" });
+// Los ids de recojos empiezan por "r"; los de anuncios por "g" (precargados) o "n" (publicados).
+const rowRole = id => id.startsWith("r") ? "reciclador" : "generador";
 const readAccountState = props => {
   const profile = Object.assign({}, PROFILE_DEFAULT, parseJson(props.profile, {}));
   profile.name = cleanText(profile.name, 60) || PROFILE_DEFAULT.name;
@@ -1478,9 +1487,6 @@ const readAccountState = props => {
   const methods = (Array.isArray(parseJson(props.methods, [])) ? parseJson(props.methods, []) : []).filter(m => m && PAY_KINDS[m.kind])
     .map((m, i) => ({ id: "m" + (i + 3), kind: m.kind, detail: cleanText(m.detail, 40) }));
   const allMethods = PAY_METHODS.concat(methods);
-  const pubs = (Array.isArray(parseJson(props.pubs, [])) ? parseJson(props.pubs, []) : []).filter(p => p && Array.isArray(p.mats))
-    .map((p, i) => ({ id: "n" + (i + 1), mats: p.mats.filter(k => MAT_ORDER.includes(k)), kg: cleanText(p.kg, 8), window: cleanText(p.window, 40), pay: PAY_OPTIONS.includes(p.pay) ? p.pay : "Sin pago", note: cleanText(p.note, 240) }))
-    .filter(p => p.mats.length && p.kg);
   const tickets = (Array.isArray(parseJson(props.tickets, [])) ? parseJson(props.tickets, []) : []).filter(t => t && REPORT_CATEGORIES.includes(t.category))
     .map((t, i) => ({ id: "#" + (4950 + i), title: cleanText(t.title, 80) || t.category, category: t.category, state: "Abierto", evidence: !!t.evidence }));
   return {
@@ -1488,7 +1494,7 @@ const readAccountState = props => {
     account: ACCOUNT_TYPES[props.account] ? props.account : "",
     profile, editProfile: props.edit === "perfil", docsOpen: props.docs === "1", uploadedDocs: uploaded,
     payOpen: props.pay === "1", extraMethods: methods, payDefault: allMethods.some(m => m.id === props.payDefault) ? props.payDefault : "m1",
-    newPubs: pubs, newTickets: tickets,
+    newPubs: parsePubs(props), newTickets: tickets,
     notifOpen: props.notif === "1", readIds: props.read != null ? props.read.split(",").filter(id => NOTIF_IDS.includes(id)) : DEFAULT_READ.slice(),
     // Campos de formulario: viven solo mientras se escribe, como `reason` o `draft`.
     authForm: { name: "", email: "", phone: "", password: "" }, authErrors: {},
@@ -1520,7 +1526,7 @@ const optimizeStops = ids => {
   return routeStats(ordered).distance <= routeStats(ids).distance ? ordered : validStops(ids);
 };
 const readFlowState = props => {
-  const rows = PICKUPS.concat(PUBLICATIONS), updates = {};
+  const rows = PICKUPS.concat(PUBLICATIONS, parsePubs(props).map(pubRecord)), updates = {};
   try {
     const raw = JSON.parse(props.updates || "{}");
     rows.forEach(row => {
@@ -1700,12 +1706,6 @@ class Component extends DCLogic {
     this.setState({ newPubs: s.newPubs.concat(pub), pubErrors: {}, qty: "", materials: {}, pubDay: "", pubTime: "", pubPay: "Sin pago", note: "", photo: "", photoName: "", dismissedSuggestion: "" });
     this.navigate("publicaciones");
   }
-  newPublicationRow(p) {
-    const mat = MATERIALS[p.mats[0]];
-    return { id: p.id, kg: p.kg, material: p.mats.map(k => MATERIALS[k].label).join(", "), posted: "Publicado ahora · " + p.pay, person: "Sin reclamar", personFg: "#8b9186", window: p.window, state: "Esperando", stateBg: "#fdf3dd", stateFg: "#8a6a1f",
-      rowBg: "#ffffff", priority: false, menuOpen: false, toggleMenu: () => {}, locked: false, lockHint: "", priorityLabel: "", togglePriority: () => {}, reschedule: () => {}, cancel: () => {}, openScanner: () => {}, openChat: () => {}, canTrack: false, track: () => {}, isNew: true, color: mat.color };
-  }
-
   // ---- Soporte
   sendReport() {
     const text = this.state.reportText.trim();
@@ -1719,7 +1719,7 @@ class Component extends DCLogic {
     this.setState(Object.assign({ tab, role: TAB_ROLE[tab] ? null : this.role(), menuRow: null, dialog: "", actionRow: null, tracking: null, notifOpen: false, editProfile: false, docsOpen: false, payOpen: false }, extra));
   }
   delivery(id) {
-    const row = PICKUPS.concat(PUBLICATIONS).find(r=>r.id===id);
+    const row = PICKUPS.concat(PUBLICATIONS, this.state.newPubs.map(pubRecord)).find(r=>r.id===id);
     if (!row) return null;
     const result = Object.assign({},row,this.state.rowUpdates[id]);
     if (result.date && result.slot) result.window = result.date.split("-").reverse().join("/") + " · " + result.slot;
@@ -1807,8 +1807,8 @@ class Component extends DCLogic {
       priorityLabel:row.priority ? "Quitar prioridad" : "Marcar como prioritaria",
       togglePriority:()=>{this.changeDelivery(row.id,{priority:!row.priority});this.setState({menuRow:null});},
       reschedule:()=>{if(!locked)this.openAction("reprogramar",row.id);}, cancel:()=>{if(!locked)this.openAction("cancelar",row.id);},
-      openScanner:()=>this.openAction("qr",row.id), openChat:()=>this.navigate("chats",{role:row.id.startsWith("g")?"generador":"reciclador",thread:row.thread,chatRow:row.id}),
-      canTrack:row.id.startsWith("g") && row.state==="En camino", track:()=>this.openTracking(row.id) });
+      openScanner:()=>this.openAction("qr",row.id), openChat:()=>this.navigate("chats",{role:rowRole(row.id),thread:row.thread,chatRow:row.id}),
+      canTrack:rowRole(row.id)==="generador" && row.state==="En camino", track:()=>this.openTracking(row.id) });
   }
 
   openPoint(id) {
@@ -1901,7 +1901,7 @@ class Component extends DCLogic {
         pinLabel: POINT_TYPES[p.type].label + ": " + p.name,
         distanceLabel: p.distance.toFixed(1).replace(".", ",") + " KM",
         ratingLabel: p.rating.toFixed(1).replace(".", ","),
-        tags: p.materials.map(k => ({ label: k === "pet" ? "PET" : MATERIALS[k].label })),
+        tags: p.materials.map(k => ({ label: MATERIALS[k].label })),
         cardBorder: this.state.selectedPoint === p.id ? "#16281f" : inRoute ? "#4c7a2f" : "#e2e5dc",
         open: () => this.openPoint(p.id), inRoute,
         stopNumber: this.state.routeIds.indexOf(p.id)+1,
@@ -1934,8 +1934,7 @@ class Component extends DCLogic {
     });
 
     const pickupRows = PICKUPS.map(p => this.deliveryRow(p));
-    const newPubRows = this.state.newPubs.map(p => this.newPublicationRow(p)).reverse();
-    const publicationRows = newPubRows.concat(PUBLICATIONS.map(p => this.deliveryRow(p)));
+    const publicationRows = this.state.newPubs.map(p => this.deliveryRow(pubRecord(p))).reverse().concat(PUBLICATIONS.map(p => this.deliveryRow(p)));
     const activePickups=pickupRows.filter(r=>!["Completado","Cancelado"].includes(r.state)).length;
     const activePublications=publicationRows.filter(r=>!["Completado","Cancelado"].includes(r.state)).length;
     const completedPickups=30+pickupRows.filter((r,i)=>r.state==="Completado" && PICKUPS[i].state!=="Completado").length;
@@ -1950,7 +1949,7 @@ class Component extends DCLogic {
     const chatDelivery = this.delivery(this.state.chatRow) || this.delivery(((isGen ? PUBLICATIONS : PICKUPS).find(r=>r.thread===activeThread.id)||{}).id);
     const actionDelivery = this.delivery(this.state.actionRow);
     const lockedAction = !actionDelivery || ["Completado","Cancelado"].includes(actionDelivery.state);
-    const validActionRole = actionDelivery && actionDelivery.id.startsWith(isGen ? "g" : "r");
+    const validActionRole = actionDelivery && rowRole(actionDelivery.id) === (isGen ? "generador" : "reciclador");
     const tracked = this.delivery(this.state.tracking);
     const trackingVisible = isGen && ["publicaciones","chats"].includes(active) && tracked && tracked.state==="En camino";
     const confirmedDelivery = this.delivery(this.state.confirmedRow);
@@ -2008,7 +2007,7 @@ class Component extends DCLogic {
         active: !!this.state.filters[l],
         toggle: () => this.setState(s => ({ filters: Object.assign({}, s.filters, { [l]: !s.filters[l] }) }))
       })
-    ).concat(MAP_MATERIALS.map(k => Object.assign(this.chip(k === "pet" ? "PET" : MATERIALS[k].label, material === k), {
+    ).concat(MAP_MATERIALS.map(k => Object.assign(this.chip(MATERIALS[k].label, material === k), {
       active: material === k, toggle: () => this.setState({ mapMaterial: material === k ? "" : k })
     })));
 
