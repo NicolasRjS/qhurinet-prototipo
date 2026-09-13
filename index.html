@@ -44,6 +44,89 @@
   .stop-number { position: absolute; right: -7px; top: -9px; width: 19px; height: 19px; border: 2px solid #ffffff; border-radius: 50%; background: #16281f; color: #ffffff; font: 10px 'IBM Plex Mono', monospace; display: flex; align-items: center; justify-content: center; }
 </style>
 </helmet>
+<sc-if value="{{ authOpen }}">
+<div style="font-family: 'IBM Plex Sans', Helvetica, sans-serif; color: #16281f; background: #f4f5f0; min-height: 100vh; display: flex; align-items: stretch; min-width: 1024px;">
+  <div style="width: 400px; flex: none; background: #16281f; color: #ffffff; padding: 40px 44px; display: flex; flex-direction: column; gap: 24px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <svg viewBox="0 0 64 64" style="width: 40px; height: 40px; flex: none;" role="img" aria-label="QhuriNet">
+        <rect width="64" height="64" rx="14" fill="#a3d24a"></rect>
+        <g fill="none" stroke="#16281f" stroke-width="5" stroke-linecap="round"><path d="M34.43 43.79 A14 14 0 1 1 45.79 32.43"></path><path d="M36.5 36.5 L47 47"></path></g>
+        <circle cx="32" cy="16" r="3.2" fill="#16281f"></circle>
+      </svg>
+      <div style="font-size: 18px; font-weight: 600; letter-spacing: -0.01em;">QhuriNet</div>
+    </div>
+    <div style="flex: 1;"></div>
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: #a3d24a;">RED DE RECICLAJE URBANO</div>
+    <div style="font-size: 26px; font-weight: 600; line-height: 1.25; letter-spacing: -0.01em;">Conecta a quien genera residuos aprovechables con quien los recicla.</div>
+    <div style="display: flex; flex-direction: column; gap: 12px; font-size: 12.5px; color: #c3d3c6; line-height: 1.5;">
+      <div style="display: flex; gap: 10px;"><div style="width: 8px; height: 8px; border-radius: 50%; background: #a3d24a; flex: none; margin-top: 6px;"></div><div>Anuncia material o recórrelo en el mapa con rutas optimizadas.</div></div>
+      <div style="display: flex; gap: 10px;"><div style="width: 8px; height: 8px; border-radius: 50%; background: #a3d24a; flex: none; margin-top: 6px;"></div><div>Coordina por chat y confirma cada entrega con un código QR.</div></div>
+      <div style="display: flex; gap: 10px;"><div style="width: 8px; height: 8px; border-radius: 50%; background: #a3d24a; flex: none; margin-top: 6px;"></div><div>Perfiles verificados con documentos validados automáticamente.</div></div>
+    </div>
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #8fa392;">PROTOTIPO · SIMULACIÓN SIN BACKEND</div>
+  </div>
+
+  <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 32px;">
+    <div onKeyDown="{{ authKey }}" style="width: 540px; background: #ffffff; border: 1px solid #e2e5dc; border-radius: 16px; padding: 32px 36px; display: flex; flex-direction: column; gap: 18px;">
+      <div>
+        <div class="flow-heading">{{ authHeading }}</div>
+        <div style="font-size: 22px; font-weight: 600; margin-top: 8px; letter-spacing: -0.01em;">{{ authTitle }}</div>
+        <div style="font-size: 12.5px; color: #5d6b5f; margin-top: 6px; line-height: 1.5;">{{ authSubtitle }}</div>
+      </div>
+
+      <div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e;">TIPO DE CUENTA</div>
+        <div role="radiogroup" aria-label="Tipo de cuenta" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+          <sc-for list="{{ accountCards }}" as="c" hint-placeholder-count="2">
+            <button type="button" class="flow-button" role="radio" aria-checked="{{ c.on }}" onClick="{{ c.select }}" style="text-align: left; padding: 14px; border-radius: 12px; display: flex; gap: 12px; align-items: flex-start; border-color: {{ c.border }}; background: {{ c.bg }}; box-shadow: {{ c.shadow }};">
+              <div style="width: 34px; height: 34px; border-radius: 9px; background: #16281f; color: #a3d24a; display: flex; align-items: center; justify-content: center; flex: none;"><div style="width: 20px; height: 20px;" dangerouslySetInnerHTML="{{ c.icon }}"></div></div>
+              <div><div style="font-size: 13px; font-weight: 600;">{{ c.label }}</div><div style="font-size: 11.5px; color: #5d6b5f; font-weight: 400; margin-top: 3px; line-height: 1.4;">{{ c.hint }}</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #4c7a2f; margin-top: 6px; letter-spacing: 0.05em;">ENTRA COMO {{ c.roleLabel }}</div></div>
+            </button>
+          </sc-for>
+        </div>
+        <sc-if value="{{ errAccount }}"><div role="alert" style="font-size: 12px; color: #b1573f; margin-top: 8px;">{{ errAccount }}</div></sc-if>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px;">
+        <sc-if value="{{ isRegister }}">
+          <div style="grid-column: span 2;">
+            <label style="display: block; font-size: 12px; font-weight: 600;">Nombre y apellidos<input class="flow-field" type="text" aria-label="Nombre y apellidos" value="{{ authName }}" onChange="{{ onAuthName }}" placeholder="Ej. Marco Quispe Rojas" maxlength="80"></input></label>
+            <sc-if value="{{ errName }}"><div role="alert" style="font-size: 12px; color: #b1573f; margin-top: 6px;">{{ errName }}</div></sc-if>
+          </div>
+        </sc-if>
+        <div style="grid-column: span 2;">
+          <label style="display: block; font-size: 12px; font-weight: 600;">Correo electrónico<input class="flow-field" type="email" aria-label="Correo electrónico" value="{{ authEmail }}" onChange="{{ onAuthEmail }}" placeholder="nombre@dominio.com" maxlength="80"></input></label>
+          <sc-if value="{{ errEmail }}"><div role="alert" style="font-size: 12px; color: #b1573f; margin-top: 6px;">{{ errEmail }}</div></sc-if>
+        </div>
+        <sc-if value="{{ isRegister }}">
+          <div>
+            <label style="display: block; font-size: 12px; font-weight: 600;">Teléfono<input class="flow-field" type="tel" aria-label="Teléfono" value="{{ authPhone }}" onChange="{{ onAuthPhone }}" placeholder="+51 9xx xxx xxx" maxlength="20"></input></label>
+            <sc-if value="{{ errPhone }}"><div role="alert" style="font-size: 12px; color: #b1573f; margin-top: 6px;">{{ errPhone }}</div></sc-if>
+          </div>
+        </sc-if>
+        <div style="grid-column: {{ passwordSpan }};">
+          <label style="display: block; font-size: 12px; font-weight: 600;">Contraseña<input class="flow-field" type="password" aria-label="Contraseña" value="{{ authPassword }}" onChange="{{ onAuthPassword }}" placeholder="Mínimo 8 caracteres" maxlength="80"></input></label>
+          <sc-if value="{{ errPassword }}"><div role="alert" style="font-size: 12px; color: #b1573f; margin-top: 6px;">{{ errPassword }}</div></sc-if>
+        </div>
+      </div>
+
+      <button type="button" class="flow-button flow-primary" onClick="{{ submitAuth }}" style="padding: 13px; font-size: 13.5px;">{{ authButton }}</button>
+
+      <div style="display: flex; align-items: center; gap: 12px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #8b9186; letter-spacing: 0.06em;"><div style="flex: 1; height: 1px; background: #eceee7;"></div>O CONTINÚA CON<div style="flex: 1; height: 1px; background: #eceee7;"></div></div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <button type="button" class="flow-button" onClick="{{ socialAuth }}" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 11px;"><span style="width: 22px; height: 22px; border-radius: 50%; border: 1px solid #d8dcd2; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; color: #16281f;">G</span>Google</button>
+        <button type="button" class="flow-button" onClick="{{ socialAuth }}" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 11px;"><span style="width: 22px; height: 22px; border-radius: 50%; background: #16281f; color: #ffffff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;">f</span>Facebook</button>
+      </div>
+
+      <div style="font-size: 12.5px; color: #5d6b5f; text-align: center;">
+        <sc-if value="{{ isLogin }}">¿No tienes cuenta? <button type="button" onClick="{{ goRegister }}" style="font: inherit; font-weight: 600; color: #4c7a2f; background: none; border: none; padding: 0; cursor: pointer;">Regístrate</button></sc-if>
+        <sc-if value="{{ isRegister }}">¿Ya tienes cuenta? <button type="button" onClick="{{ goLogin }}" style="font: inherit; font-weight: 600; color: #4c7a2f; background: none; border: none; padding: 0; cursor: pointer;">Inicia sesión</button></sc-if>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{ appOpen }}">
 <div style="font-family: 'IBM Plex Sans', Helvetica, sans-serif; color: #16281f; background: #f4f5f0; min-height: 100vh; display: flex; min-width: 1240px;">
 
   <div style="width: 88px; flex: none; background: #16281f; display: flex; flex-direction: column; align-items: center; padding: 20px 0 18px; gap: 22px; position: sticky; top: 0; height: 100vh;">
@@ -72,12 +155,13 @@
       <div style="font-size: 8px; font-family: 'IBM Plex Mono', monospace; color: #6f8674;">MODO</div>
       <div style="font-size: 9.5px; font-family: 'IBM Plex Mono', monospace; color: #a3d24a;">{{ roleShort }}</div>
     </div>
-    <div style="width: 40px; height: 40px; border-radius: 50%; background: #a3d24a; color: #16281f; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">M</div>
+    <sc-if value="{{ hasAvatarPhoto }}"><img src="{{ avatarPhoto }}" alt="Foto de perfil" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex: none;"></img></sc-if>
+    <sc-if value="{{ noAvatarPhoto }}"><div aria-label="Iniciales del perfil" style="width: 40px; height: 40px; border-radius: 50%; background: #a3d24a; color: #16281f; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">{{ avatarInitial }}</div></sc-if>
   </div>
 
   <div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
 
-    <div style="min-height: 76px; flex: none; background: #ffffff; border-bottom: 1px solid #e2e5dc; display: flex; align-items: center; gap: 18px; padding: 0 28px; white-space: nowrap;">
+    <div style="min-height: 76px; flex: none; position: relative; z-index: 20; background: #ffffff; border-bottom: 1px solid #e2e5dc; display: flex; align-items: center; gap: 18px; padding: 0 28px; white-space: nowrap;">
       <div>
         <div style="font-size: 17px; font-weight: 600; letter-spacing: -0.01em;">{{ pageTitle }}</div>
         <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #6c7a6e; margin-top: 3px;">{{ pageMeta }}</div>
@@ -86,6 +170,34 @@
       <div style="display: flex; align-items: center; gap: 10px; background: #f4f5f0; border: 1px solid #e2e5dc; border-radius: 8px; padding: 9px 12px; width: 260px;">
         <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; color: #6c7a6e;"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M15.5 15.5 L21 21" stroke="currentColor" stroke-width="2"></path></svg>
         <input type="text" aria-label="Buscar" placeholder="Buscar" value="{{ search }}" onChange="{{ onSearch }}" style="flex: 1; min-width: 0; border: none; background: transparent; outline: none; font-size: 13px; color: #16281f;"></input>
+      </div>
+      <div style="position: relative;">
+        <button type="button" class="flow-button" aria-label="Notificaciones" aria-expanded="{{ notifOpen }}" onClick="{{ toggleNotif }}" style="position: relative; width: 40px; height: 38px; padding: 0; display: flex; align-items: center; justify-content: center;">
+          <svg viewBox="0 0 24 24" style="width: 18px; height: 18px;" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16 V11 A6 6 0 0 1 18 11 V16 L19.5 18 H4.5 Z"></path><path d="M10 20 A2 2 0 0 0 14 20"></path></svg>
+          <sc-if value="{{ hasUnread }}"><span aria-label="{{ unreadCount }} sin leer" style="position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; border-radius: 9px; background: #b1573f; color: #ffffff; font-family: 'IBM Plex Mono', monospace; font-size: 10px; display: flex; align-items: center; justify-content: center; padding: 0 5px;">{{ unreadCount }}</span></sc-if>
+        </button>
+        <sc-if value="{{ notifOpen }}">
+          <div role="region" aria-label="Notificaciones" onKeyDown="{{ notifKey }}" style="position: absolute; right: 0; top: 48px; width: 400px; background: #ffffff; border: 1px solid #e2e5dc; border-radius: 14px; box-shadow: 0 12px 32px rgba(22,40,31,0.14); z-index: 50; white-space: normal; overflow: hidden;">
+            <div style="display: flex; align-items: center; gap: 10px; padding: 16px 18px; border-bottom: 1px solid #eceee7;">
+              <div><div style="font-size: 14px; font-weight: 600;">Notificaciones</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #6c7a6e; margin-top: 2px;">{{ unreadCount }} SIN LEER</div></div>
+              <div style="flex: 1;"></div>
+              <button type="button" class="flow-button" onClick="{{ markAllRead }}" disabled="{{ allRead }}" style="font-size: 11px; padding: 7px 10px;">Marcar todas</button>
+              <button type="button" class="flow-button" aria-label="Cerrar notificaciones" onClick="{{ closeNotif }}" style="padding: 7px 10px;">×</button>
+            </div>
+            <div style="max-height: 420px; overflow-y: auto;">
+              <sc-for list="{{ notifications }}" as="n" hint-placeholder-count="6">
+                <div style="display: flex; gap: 12px; padding: 14px 18px; border-bottom: 1px solid #eceee7; background: {{ n.bg }};">
+                  <div style="width: 8px; height: 8px; border-radius: 50%; background: {{ n.dot }}; flex: none; margin-top: 6px;"></div>
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="display: flex; align-items: baseline; gap: 10px;"><div style="flex: 1; font-size: 12.5px; font-weight: {{ n.weight }};">{{ n.title }}</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #8b9186;">{{ n.time }}</div></div>
+                    <div style="font-size: 12px; color: #3d4a3f; line-height: 1.5; margin-top: 3px;">{{ n.text }}</div>
+                    <sc-if value="{{ n.unread }}"><button type="button" class="flow-button" onClick="{{ n.markRead }}" style="margin-top: 8px; font-size: 11px; padding: 5px 9px; color: #4c7a2f;">Marcar como leída</button></sc-if>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
       </div>
       <div style="display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; background: #eef2e4; border: 1px solid #d9e3c3; border-radius: 8px; padding: 9px 14px;">
         <div style="width: 8px; height: 8px; border-radius: 50%; background: #4c7a2f;"></div>
@@ -622,11 +734,12 @@
                   <div onClick="{{ m.toggle }}" style="font-size: 12px; padding: 7px 13px; border-radius: 8px; cursor: pointer; background: {{ m.bg }}; color: {{ m.fg }}; border: 1px solid {{ m.border }};">{{ m.label }}</div>
                 </sc-for>
               </div>
+              <sc-if value="{{ errMats }}"><div role="alert" style="font-size: 12px; color: #b1573f; margin-top: 8px;">{{ errMats }}</div></sc-if>
             </div>
             <div>
               <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e;">CANTIDAD APROXIMADA</div>
               <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
-                <input type="text" value="{{ qty }}" onChange="{{ onQty }}" style="width: 110px; border: 1px solid #e2e5dc; background: #f4f5f0; border-radius: 8px; padding: 11px 14px; font-family: 'IBM Plex Mono', monospace; font-size: 16px; outline: none; color: #16281f;"></input>
+                <input type="text" aria-label="Cantidad aproximada en kilos" value="{{ qty }}" onChange="{{ onQty }}" style="width: 110px; border: 1px solid {{ qtyBorder }}; background: #f4f5f0; border-radius: 8px; padding: 11px 14px; font-family: 'IBM Plex Mono', monospace; font-size: 16px; outline: none; color: #16281f;"></input>
                 <div style="font-size: 13px; color: #3d4a3f;">kg</div>
                 <div style="display: flex; gap: 6px; margin-left: 6px;">
                   <div onClick="{{ qty5 }}" style="border: 1px solid #d8dcd2; border-radius: 20px; padding: 6px 12px; font-size: 11.5px; cursor: pointer;" style-hover="border-color: #4c7a2f;">5</div>
@@ -634,36 +747,59 @@
                   <div onClick="{{ qty25 }}" style="border: 1px solid #d8dcd2; border-radius: 20px; padding: 6px 12px; font-size: 11.5px; cursor: pointer;" style-hover="border-color: #4c7a2f;">25</div>
                 </div>
               </div>
+              <sc-if value="{{ errQty }}"><div role="alert" style="font-size: 12px; color: #b1573f; margin-top: 8px;">{{ errQty }}</div></sc-if>
             </div>
             <div>
               <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e;">DISPONIBILIDAD</div>
               <div style="display: flex; gap: 8px; margin-top: 10px;">
-                <input type="text" placeholder="Hoy" style="flex: 1; border: 1px solid #e2e5dc; background: #f4f5f0; border-radius: 8px; padding: 11px 14px; font-size: 13px; outline: none; color: #16281f;"></input>
-                <input type="text" placeholder="14:00 – 18:00" style="flex: 1; border: 1px solid #e2e5dc; background: #f4f5f0; border-radius: 8px; padding: 11px 14px; font-size: 13px; outline: none; color: #16281f;"></input>
+                <input type="text" aria-label="Día disponible" placeholder="Hoy" value="{{ pubDay }}" onChange="{{ onPubDay }}" maxlength="20" style="flex: 1; border: 1px solid {{ windowBorder }}; background: #f4f5f0; border-radius: 8px; padding: 11px 14px; font-size: 13px; outline: none; color: #16281f;"></input>
+                <input type="text" aria-label="Rango de horas" placeholder="14:00 – 18:00" value="{{ pubTime }}" onChange="{{ onPubTime }}" maxlength="20" style="flex: 1; border: 1px solid {{ windowBorder }}; background: #f4f5f0; border-radius: 8px; padding: 11px 14px; font-size: 13px; outline: none; color: #16281f;"></input>
               </div>
+              <sc-if value="{{ errWindow }}"><div role="alert" style="font-size: 12px; color: #b1573f; margin-top: 8px;">{{ errWindow }}</div></sc-if>
             </div>
             <div>
               <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e;">PAGO (OPCIONAL)</div>
-              <div style="display: flex; gap: 7px; margin-top: 10px;">
-                <div style="border: 1px solid #16281f; border-radius: 8px; padding: 9px 14px; font-size: 12px; font-weight: 600; cursor: pointer;">Sin pago</div>
-                <div style="border: 1px solid #d8dcd2; border-radius: 8px; padding: 9px 14px; font-size: 12px; cursor: pointer;" style-hover="border-color: #4c7a2f;">Yape</div>
-                <div style="border: 1px solid #d8dcd2; border-radius: 8px; padding: 9px 14px; font-size: 12px; cursor: pointer;" style-hover="border-color: #4c7a2f;">Efectivo</div>
+              <div role="radiogroup" aria-label="Pago" style="display: flex; gap: 7px; margin-top: 10px;">
+                <sc-for list="{{ payChips }}" as="o" hint-placeholder-count="3">
+                  <div onClick="{{ o.select }}" style="border: 1px solid {{ o.border }}; border-radius: 8px; padding: 9px 14px; font-size: 12px; font-weight: {{ o.weight }}; cursor: pointer;" style-hover="border-color: #4c7a2f;">{{ o.label }}</div>
+                </sc-for>
               </div>
             </div>
             <div style="grid-column: span 2;">
               <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e;">NOTA PARA EL RECICLADOR (OPCIONAL)</div>
-              <textarea placeholder="Ej. las cajas están en la puerta lateral, toca el timbre 2." style="width: 100%; height: 84px; resize: none; border: 1px solid #e2e5dc; background: #f4f5f0; border-radius: 8px; padding: 12px 14px; font-size: 13px; outline: none; margin-top: 10px; color: #16281f; line-height: 1.5;"></textarea>
+              <textarea aria-label="Nota para el reciclador" placeholder="Ej. las cajas están en la puerta lateral, toca el timbre 2." value="{{ note }}" onChange="{{ onNote }}" maxlength="240" style="width: 100%; height: 84px; resize: none; border: 1px solid #e2e5dc; background: #f4f5f0; border-radius: 8px; padding: 12px 14px; font-size: 13px; outline: none; margin-top: 10px; color: #16281f; line-height: 1.5;"></textarea>
+              <sc-if value="{{ hasSuggestion }}">
+                <div role="status" style="display: flex; align-items: center; gap: 12px; margin-top: 10px; border: 1px solid #d9e3c3; background: #eef2e4; border-radius: 10px; padding: 12px 14px;">
+                  <div style="width: 30px; height: 30px; border-radius: 8px; background: #16281f; color: #a3d24a; display: flex; align-items: center; justify-content: center; flex: none; font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600;">AI</div>
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: 12.5px; font-weight: 600;">Sugerencia del sistema: {{ suggestionText }}</div>
+                    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #4c7a2f; margin-top: 3px; letter-spacing: 0.05em;">{{ suggestionConfidence }} · SIMULADA POR PALABRAS CLAVE</div>
+                  </div>
+                  <button type="button" class="flow-button flow-primary" onClick="{{ applySuggestion }}" style="padding: 7px 12px; font-size: 11.5px;">Aceptar</button>
+                  <button type="button" class="flow-button" onClick="{{ dismissSuggestion }}" style="padding: 7px 12px; font-size: 11.5px;">Rechazar</button>
+                </div>
+              </sc-if>
             </div>
             <div style="grid-column: span 2;">
               <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e;">FOTO (OPCIONAL)</div>
-              <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <div title="Agregar foto del material" style="width: 82px; height: 82px; border: 1px dashed #c3cbbc; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: #6c7a6e; cursor: pointer;" style-hover="border-color: #4c7a2f; color: #4c7a2f;">
+              <div style="display: flex; gap: 10px; margin-top: 10px; align-items: flex-start;">
+                <label title="Agregar foto del material" style="width: 82px; height: 82px; border: 1px dashed #c3cbbc; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: #6c7a6e; cursor: pointer;" style-hover="border-color: #4c7a2f; color: #4c7a2f;">
                   <svg viewBox="0 0 24 24" style="width: 24px; height: 24px;" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.2" y="5.2" width="17.6" height="13.6" rx="2.2"></rect><circle cx="8.6" cy="10.2" r="1.7"></circle><path d="M3.6 16.6 L9 11.4 L13 15 L16 12.6 L20.4 16.6"></path></svg>
                   <div style="font-size: 10px;">Agregar</div>
-                </div>
-                <div style="width: 82px; height: 82px; border-radius: 10px; background: #eceee7; display: flex; align-items: center; justify-content: center; color: #a8b2a2;">
-                  <svg viewBox="0 0 24 24" style="width: 26px; height: 26px;" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.2" y="5.2" width="17.6" height="13.6" rx="2.2"></rect><circle cx="8.6" cy="10.2" r="1.7"></circle><path d="M3.6 16.6 L9 11.4 L13 15 L16 12.6 L20.4 16.6"></path></svg>
-                </div>
+                  <input type="file" accept="image/*" aria-label="Agregar foto del material" onChange="{{ onPhoto }}" style="display: none;"></input>
+                </label>
+                <sc-if value="{{ hasPhoto }}">
+                  <div style="position: relative; width: 82px; height: 82px; flex: none;">
+                    <img src="{{ photo }}" alt="Foto del material" style="width: 82px; height: 82px; border-radius: 10px; object-fit: cover; border: 1px solid #e2e5dc;"></img>
+                    <button type="button" class="flow-button" aria-label="Quitar foto" onClick="{{ removePhoto }}" style="position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; padding: 0; border-radius: 50%; font-size: 13px; line-height: 1;">×</button>
+                  </div>
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #5d6b5f; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; align-self: center;">{{ photoName }}</div>
+                </sc-if>
+                <sc-if value="{{ noPhoto }}">
+                  <div style="width: 82px; height: 82px; border-radius: 10px; background: #eceee7; display: flex; align-items: center; justify-content: center; color: #a8b2a2;">
+                    <svg viewBox="0 0 24 24" style="width: 26px; height: 26px;" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.2" y="5.2" width="17.6" height="13.6" rx="2.2"></rect><circle cx="8.6" cy="10.2" r="1.7"></circle><path d="M3.6 16.6 L9 11.4 L13 15 L16 12.6 L20.4 16.6"></path></svg>
+                  </div>
+                </sc-if>
               </div>
             </div>
           </div>
@@ -714,8 +850,8 @@
                   </div>
                   <div style="font-size: 11.5px; color: #5d6b5f; margin-top: 4px;">Minimarket H&amp;J · Magdalena</div>
                   <div style="display: flex; gap: 12px; margin-top: 9px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px;">
-                    <div>HOY 14:00–18:00</div>
-                    <div>SIN PAGO</div>
+                    <div>{{ previewWindow }}</div>
+                    <div>{{ previewPay }}</div>
                   </div>
                 </div>
               </div>
@@ -731,42 +867,45 @@
         <div style="display: flex; flex-direction: column; gap: 20px;">
           <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 14px; padding: 24px;">
             <div style="display: flex; align-items: center; gap: 16px;">
-              <div style="width: 64px; height: 64px; border-radius: 50%; background: #16281f; color: #a3d24a; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 600; flex: none;">M</div>
+              <sc-if value="{{ hasAvatarPhoto }}"><img src="{{ avatarPhoto }}" alt="Foto de perfil" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; flex: none;"></img></sc-if>
+              <sc-if value="{{ noAvatarPhoto }}"><div style="width: 64px; height: 64px; border-radius: 50%; background: #16281f; color: #a3d24a; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 600; flex: none;">{{ avatarInitial }}</div></sc-if>
               <div>
-                <div style="font-size: 17px; font-weight: 600;">Marco Quispe</div>
-                <div style="font-size: 12px; color: #5d6b5f; margin-top: 3px;">Reciclador · Lima Centro</div>
+                <div style="font-size: 17px; font-weight: 600;">{{ profileName }}</div>
+                <div style="font-size: 12px; color: #5d6b5f; margin-top: 3px;">{{ profileRoleLine }}</div>
                 <div style="display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; background: #eef2e4; border-radius: 6px; padding: 4px 9px; font-size: 11px; font-weight: 600; color: #3f6224;">Verificado</div>
               </div>
             </div>
+            <sc-if value="{{ profileBio }}"><div style="font-size: 12.5px; color: #3d4a3f; line-height: 1.55; margin-top: 16px;">{{ profileBio }}</div></sc-if>
             <div style="display: flex; flex-direction: column; margin-top: 20px;">
-              <div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid #eceee7; font-size: 12.5px;"><div style="color: #5d6b5f;">Correo</div><div>marco.q@gmail.com</div></div>
-              <div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid #eceee7; font-size: 12.5px;"><div style="color: #5d6b5f;">Teléfono</div><div style="font-family: 'IBM Plex Mono', monospace;">+51 924 283 725</div></div>
-              <div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid #eceee7; font-size: 12.5px;"><div style="color: #5d6b5f;">Materiales</div><div>Cartón, PET, vidrio</div></div>
+              <div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid #eceee7; font-size: 12.5px;"><div style="color: #5d6b5f;">Correo</div><div>{{ profileEmail }}</div></div>
+              <div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid #eceee7; font-size: 12.5px;"><div style="color: #5d6b5f;">Teléfono</div><div style="font-family: 'IBM Plex Mono', monospace;">{{ profilePhone }}</div></div>
+              <div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid #eceee7; font-size: 12.5px;"><div style="color: #5d6b5f;">Materiales</div><div style="text-align: right;">{{ profileMats }}</div></div>
               <div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid #eceee7; font-size: 12.5px;"><div style="color: #5d6b5f;">Visibilidad</div><div style="color: #4c7a2f; font-weight: 600;">Activa</div></div>
             </div>
             <div style="display: flex; gap: 8px; margin-top: 18px;">
-              <div style="flex: 1; border: 1px solid #16281f; border-radius: 8px; padding: 10px; text-align: center; font-size: 12.5px; font-weight: 600; cursor: pointer;" style-hover="background: #16281f; color: #ffffff;">Editar perfil</div>
-              <div style="border: 1px solid #d8dcd2; border-radius: 8px; padding: 10px 14px; font-size: 12.5px; cursor: pointer;" style-hover="border-color: #16281f;">Documentos</div>
+              <button type="button" class="flow-button" onClick="{{ openEditProfile }}" style="flex: 1; border-color: #16281f; padding: 10px; font-size: 12.5px;">Editar perfil</button>
+              <button type="button" class="flow-button" onClick="{{ openDocs }}" style="padding: 10px 14px; font-size: 12.5px; font-weight: 400;">Documentos</button>
+            </div>
+            <div style="text-align: center; margin-top: 14px;">
+              <button type="button" onClick="{{ logout }}" style="font: inherit; font-size: 12px; font-weight: 600; color: #b1573f; background: none; border: none; padding: 0; cursor: pointer;">Cerrar sesión</button>
             </div>
           </div>
 
           <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 14px; padding: 22px 24px;">
             <div style="font-size: 14px; font-weight: 600;">Métodos de pago</div>
             <div style="display: flex; flex-direction: column; margin-top: 8px;">
-              <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0; border-top: 1px solid #eceee7;">
-                <div style="width: 40px; height: 28px; border-radius: 5px; background: #1a1f71; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; font-style: italic;">VISA</div>
-                <div style="flex: 1; font-size: 12.5px;">•••• 4821</div>
-                <div style="font-size: 11px; font-weight: 600; color: #3f6224; background: #eef2e4; padding: 4px 9px; border-radius: 6px;">Predeterminado</div>
-              </div>
-              <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0; border-top: 1px solid #eceee7;">
-                <div style="width: 40px; height: 28px; border-radius: 5px; background: #742284; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700;">Yape</div>
-                <div style="flex: 1; font-size: 12.5px;">+51 924 ••• 725</div>
-                <div style="font-size: 11.5px; color: #4c7a2f; font-weight: 600; cursor: pointer;">Usar</div>
-              </div>
-              <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0; border-top: 1px solid #eceee7; cursor: pointer;">
+              <sc-for list="{{ payments }}" as="m" hint-placeholder-count="2">
+                <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0; border-top: 1px solid #eceee7;">
+                  <div style="width: 40px; height: 28px; border-radius: 5px; background: {{ m.bg }}; color: {{ m.fg }}; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; flex: none;">{{ m.label }}</div>
+                  <div style="flex: 1; font-size: 12.5px;">{{ m.detail }}</div>
+                  <sc-if value="{{ m.isDefault }}"><div style="font-size: 11px; font-weight: 600; color: #3f6224; background: #eef2e4; padding: 4px 9px; border-radius: 6px;">Predeterminado</div></sc-if>
+                  <sc-if value="{{ m.canUse }}"><button type="button" onClick="{{ m.use }}" style="font: inherit; font-size: 11.5px; color: #4c7a2f; font-weight: 600; background: none; border: none; padding: 0; cursor: pointer;">Usar</button></sc-if>
+                </div>
+              </sc-for>
+              <button type="button" onClick="{{ openPay }}" style="display: flex; align-items: center; gap: 12px; padding: 14px 0; border: none; border-top: 1px solid #eceee7; background: none; cursor: pointer; width: 100%; text-align: left; font: inherit;">
                 <div style="width: 40px; height: 28px; border: 1px dashed #c3cbbc; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #6c7a6e;">+</div>
                 <div style="flex: 1; font-size: 12.5px; color: #5d6b5f;">Agregar método</div>
-              </div>
+              </button>
             </div>
           </div>
         </div>
@@ -831,24 +970,17 @@
 
             <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 14px; padding: 22px 24px;">
               <div style="font-size: 14px; font-weight: 600;">Verificación</div>
-              <div style="font-size: 12px; color: #5d6b5f; margin-top: 6px; line-height: 1.55;">Tus documentos fueron revisados el 12 de agosto. La verificación te da prioridad en anuncios nuevos.</div>
+              <div style="font-size: 12px; color: #5d6b5f; margin-top: 6px; line-height: 1.55;">{{ approvedCount }} documentos aprobados. La validación es automática y te da prioridad en anuncios nuevos.</div>
               <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 16px;">
-                <div style="display: flex; align-items: center; gap: 10px; border: 1px solid #eceee7; border-radius: 8px; padding: 11px 13px;">
-                  <div style="width: 8px; height: 8px; border-radius: 50%; background: #4c7a2f;"></div>
-                  <div style="flex: 1; font-size: 12.5px;">Documento de identidad</div>
-                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #4c7a2f;">OK</div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 10px; border: 1px solid #eceee7; border-radius: 8px; padding: 11px 13px;">
-                  <div style="width: 8px; height: 8px; border-radius: 50%; background: #4c7a2f;"></div>
-                  <div style="flex: 1; font-size: 12.5px;">Carné de reciclador</div>
-                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #4c7a2f;">OK</div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 10px; border: 1px solid #eceee7; border-radius: 8px; padding: 11px 13px;">
-                  <div style="width: 8px; height: 8px; border-radius: 50%; background: #e8b53a;"></div>
-                  <div style="flex: 1; font-size: 12.5px;">Constancia municipal</div>
-                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #8a6a1f;">POR VENCER</div>
-                </div>
+                <sc-for list="{{ documents }}" as="d" hint-placeholder-count="3">
+                  <div style="display: flex; align-items: center; gap: 10px; border: 1px solid #eceee7; border-radius: 8px; padding: 11px 13px;">
+                    <div style="width: 8px; height: 8px; border-radius: 50%; background: {{ d.dot }};"></div>
+                    <div style="flex: 1; font-size: 12.5px;">{{ d.name }}</div>
+                    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: {{ d.stateFg }};">{{ d.stateLabel }}</div>
+                  </div>
+                </sc-for>
               </div>
+              <button type="button" class="flow-button" onClick="{{ openDocs }}" style="margin-top: 14px; font-size: 12px;">Ver y subir documentos</button>
             </div>
           </div>
         </div>
@@ -886,26 +1018,32 @@
 
           <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 14px; padding: 22px 24px;">
             <div style="font-size: 14px; font-weight: 600;">Reportar un caso</div>
-            <div style="display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px;">
-              <div style="border: 1px solid #16281f; border-radius: 20px; padding: 6px 13px; font-size: 12px; font-weight: 600; cursor: pointer;">Incumplimiento</div>
-              <div style="border: 1px solid #d8dcd2; border-radius: 20px; padding: 6px 13px; font-size: 12px; cursor: pointer;" style-hover="border-color: #4c7a2f;">Material distinto</div>
-              <div style="border: 1px solid #d8dcd2; border-radius: 20px; padding: 6px 13px; font-size: 12px; cursor: pointer;" style-hover="border-color: #4c7a2f;">Error en la app</div>
+            <div role="radiogroup" aria-label="Categoría del caso" style="display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px;">
+              <sc-for list="{{ reportChips }}" as="c" hint-placeholder-count="3">
+                <div onClick="{{ c.select }}" style="border: 1px solid {{ c.border }}; border-radius: 20px; padding: 6px 13px; font-size: 12px; font-weight: {{ c.weight }}; cursor: pointer;" style-hover="border-color: #4c7a2f;">{{ c.label }}</div>
+              </sc-for>
             </div>
-            <textarea placeholder="Cuéntanos qué pasó" style="width: 100%; height: 92px; resize: none; border: 1px solid #e2e5dc; background: #f4f5f0; border-radius: 8px; padding: 12px 14px; font-size: 13px; outline: none; margin-top: 14px; color: #16281f; line-height: 1.5;"></textarea>
-            <div style="background: #16281f; color: #ffffff; font-size: 13px; font-weight: 600; text-align: center; padding: 11px; border-radius: 8px; margin-top: 12px; cursor: pointer;" style-hover="background: #24402e;">Enviar reporte</div>
+            <textarea aria-label="Cuéntanos qué pasó" placeholder="Cuéntanos qué pasó" value="{{ reportText }}" onChange="{{ onReportText }}" maxlength="500" style="width: 100%; height: 92px; resize: none; border: 1px solid #e2e5dc; background: #f4f5f0; border-radius: 8px; padding: 12px 14px; font-size: 13px; outline: none; margin-top: 14px; color: #16281f; line-height: 1.5;"></textarea>
+            <div style="display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap;">
+              <label class="flow-button" style="display: inline-block; font-weight: 400;">Adjuntar evidencia<input type="file" accept="image/*" aria-label="Adjuntar evidencia" onChange="{{ onReportFile }}" style="display: none;"></input></label>
+              <sc-if value="{{ hasReportFile }}"><div style="display: flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #3d4a3f; max-width: 200px;"><span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ reportFile }}</span><button type="button" aria-label="Quitar evidencia" onClick="{{ removeReportFile }}" style="font: inherit; background: none; border: none; color: #b1573f; cursor: pointer; padding: 0;">×</button></div></sc-if>
+              <sc-if value="{{ noReportFile }}"><div style="font-size: 11.5px; color: #8b9186;">Imagen opcional</div></sc-if>
+            </div>
+            <sc-if value="{{ reportError }}"><div role="alert" style="font-size: 12px; color: #b1573f; margin-top: 10px;">{{ reportError }}</div></sc-if>
+            <sc-if value="{{ reportNotice }}"><div role="status" style="font-size: 12px; color: #3f6224; background: #eef2e4; border-radius: 8px; padding: 9px 12px; margin-top: 10px;">{{ reportNotice }}</div></sc-if>
+            <button type="button" onClick="{{ sendReport }}" style="width: 100%; font: inherit; background: #16281f; color: #ffffff; font-size: 13px; font-weight: 600; text-align: center; padding: 11px; border: none; border-radius: 8px; margin-top: 12px; cursor: pointer;" style-hover="background: #24402e;">Enviar reporte</button>
           </div>
 
           <div style="background: #ffffff; border: 1px solid #e2e5dc; border-radius: 14px; padding: 22px 24px;">
             <div style="font-size: 14px; font-weight: 600;">Mis tickets</div>
-            <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0 0; margin-top: 8px; border-top: 1px solid #eceee7;">
-              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #6c7a6e;">#4821</div>
-              <div style="flex: 1; font-size: 12.5px;">Material distinto al anunciado</div>
-              <div style="font-size: 11px; font-weight: 600; background: #eef2e4; color: #3f6224; padding: 4px 9px; border-radius: 6px;">Resuelto</div>
-            </div>
-            <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0 0; margin-top: 14px; border-top: 1px solid #eceee7;">
-              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #6c7a6e;">#4903</div>
-              <div style="flex: 1; font-size: 12.5px;">No pudo confirmar el QR</div>
-              <div style="font-size: 11px; font-weight: 600; background: #fdf3dd; color: #8a6a1f; padding: 4px 9px; border-radius: 6px;">En revisión</div>
+            <div style="display: flex; flex-direction: column; margin-top: 8px;">
+              <sc-for list="{{ tickets }}" as="t" hint-placeholder-count="2">
+                <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0; border-top: 1px solid #eceee7;">
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #6c7a6e; flex: none;">{{ t.id }}</div>
+                  <div style="flex: 1; min-width: 0;"><div style="font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ t.title }}</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #8b9186; margin-top: 3px;">{{ t.meta }}</div></div>
+                  <div style="font-size: 11px; font-weight: 600; background: {{ t.bg }}; color: {{ t.fg }}; padding: 4px 9px; border-radius: 6px; flex: none;">{{ t.state }}</div>
+                </div>
+              </sc-for>
             </div>
           </div>
         </div>
@@ -913,6 +1051,92 @@
     </sc-if>
 
   </div>
+
+  <sc-if value="{{ editProfile }}">
+    <div class="flow-overlay">
+      <div class="flow-dialog" role="dialog" aria-modal="true" aria-label="Editar perfil" onKeyDown="{{ editKey }}" style="width: 520px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-size: 17px; font-weight: 600;">Editar perfil</span><button type="button" class="flow-button" aria-label="Cerrar diálogo" onClick="{{ closeEdit }}">×</button></div>
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <sc-if value="{{ pfHasPhoto }}"><img src="{{ pfPhoto }}" alt="Vista previa de la foto" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; flex: none;"></img></sc-if>
+          <sc-if value="{{ pfNoPhoto }}"><div style="width: 64px; height: 64px; border-radius: 50%; background: #16281f; color: #a3d24a; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 600; flex: none;">{{ pfInitial }}</div></sc-if>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <label class="flow-button" style="display: inline-block;">Cambiar foto<input type="file" accept="image/*" aria-label="Cambiar foto" onChange="{{ onPfPhoto }}" style="display: none;"></input></label>
+            <sc-if value="{{ pfHasPhoto }}"><button type="button" class="flow-button flow-danger" onClick="{{ removePfPhoto }}">Quitar foto</button></sc-if>
+          </div>
+        </div>
+        <div><label style="display: block; font-size: 12px; font-weight: 600;">Nombre<input class="flow-field" aria-label="Nombre" value="{{ pfName }}" onChange="{{ onPfName }}" maxlength="60"></input></label><sc-if value="{{ pfErrName }}"><div role="alert" style="font-size: 12px; color: #b1573f; margin-top: 6px;">{{ pfErrName }}</div></sc-if></div>
+        <div><label style="display: block; font-size: 12px; font-weight: 600;">Teléfono<input class="flow-field" type="tel" aria-label="Teléfono" value="{{ pfPhone }}" onChange="{{ onPfPhone }}" maxlength="20"></input></label><sc-if value="{{ pfErrPhone }}"><div role="alert" style="font-size: 12px; color: #b1573f; margin-top: 6px;">{{ pfErrPhone }}</div></sc-if></div>
+        <label style="display: block; font-size: 12px; font-weight: 600;">Descripción<textarea class="flow-field" aria-label="Descripción" value="{{ pfBio }}" onChange="{{ onPfBio }}" maxlength="240" rows="3" placeholder="Cuenta qué recoges, en qué zona y en qué horarios."></textarea></label>
+        <div>
+          <div style="font-size: 12px; font-weight: 600;">Materiales que manejas</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px;">
+            <sc-for list="{{ pfMatChips }}" as="m" hint-placeholder-count="6">
+              <button type="button" onClick="{{ m.toggle }}" style="font: inherit; font-size: 12px; padding: 7px 13px; border-radius: 8px; cursor: pointer; background: {{ m.bg }}; color: {{ m.fg }}; border: 1px solid {{ m.border }};">{{ m.label }}</button>
+            </sc-for>
+          </div><sc-if value="{{ pfErrMats }}"><div role="alert" style="font-size: 12px; color: #b1573f; margin-top: 6px;">{{ pfErrMats }}</div></sc-if>
+        </div>
+        <div style="display: flex; gap: 8px;"><button type="button" class="flow-button flow-primary" onClick="{{ saveProfile }}">Guardar cambios</button><button type="button" class="flow-button" onClick="{{ closeEdit }}">Cancelar</button></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ docsOpen }}">
+    <div class="flow-overlay">
+      <div class="flow-dialog" role="dialog" aria-modal="true" aria-label="Documentos de verificación" onKeyDown="{{ docsKey }}" style="width: 560px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;"><div><div class="flow-heading">VERIFICACIÓN</div><div style="font-size: 17px; font-weight: 600; margin-top: 6px;">Mis documentos</div></div><button type="button" class="flow-button" aria-label="Cerrar diálogo" onClick="{{ closeDocs }}">×</button></div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: grid; grid-template-columns: 70px 1fr 110px 90px; gap: 10px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: #6c7a6e; padding-bottom: 6px; border-bottom: 1px solid #eceee7;"><div>TIPO</div><div>DOCUMENTO</div><div>ESTADO</div><div>FECHA</div></div>
+          <sc-for list="{{ documents }}" as="d" hint-placeholder-count="3">
+            <div style="display: grid; grid-template-columns: 70px 1fr 110px 90px; gap: 10px; align-items: center; font-size: 12.5px; padding: 8px 0; border-bottom: 1px solid #eceee7;">
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px;">{{ d.type }}</div>
+              <div style="min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ d.name }}<sc-if value="{{ d.fresh }}"><span class="material-tag" style="margin-left: 8px;">Nuevo</span></sc-if></div>
+              <div style="display: flex; align-items: center; gap: 7px;"><div style="width: 8px; height: 8px; border-radius: 50%; background: {{ d.dot }};"></div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: {{ d.stateFg }};">{{ d.stateLabel }}</div></div>
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #5d6b5f;">{{ d.date }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="background: #f4f5f0; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+          <div style="font-size: 13px; font-weight: 600;">Subir un documento</div>
+          <div>
+            <div class="flow-heading">TIPO</div>
+            <div role="radiogroup" aria-label="Tipo de documento" style="display: flex; gap: 7px; margin-top: 8px;">
+              <sc-for list="{{ docTypes }}" as="t" hint-placeholder-count="3">
+                <button type="button" role="radio" onClick="{{ t.select }}" style="font: inherit; font-size: 12px; padding: 6px 13px; border-radius: 20px; cursor: pointer; background: {{ t.bg }}; color: {{ t.fg }}; border: 1px solid {{ t.border }};">{{ t.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <label class="flow-button" style="display: inline-block;">Seleccionar archivo<input type="file" accept="image/*,.pdf" aria-label="Seleccionar archivo" onChange="{{ onDocFile }}" style="display: none;"></input></label>
+            <sc-if value="{{ hasDocFile }}"><div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #3d4a3f;">{{ docFileName }}</div></sc-if>
+            <sc-if value="{{ noDocFile }}"><div style="font-size: 12px; color: #8b9186;">PDF o imagen · se valida automáticamente</div></sc-if>
+          </div>
+          <sc-if value="{{ docError }}"><div role="alert" style="font-size: 12px; color: #b1573f;">{{ docError }}</div></sc-if>
+          <div><button type="button" class="flow-button flow-primary" onClick="{{ uploadDoc }}">Subir documento</button></div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ payOpen }}">
+    <div class="flow-overlay">
+      <div class="flow-dialog" role="dialog" aria-modal="true" aria-label="Agregar método de pago" onKeyDown="{{ payKey }}">
+        <div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-size: 17px; font-weight: 600;">Agregar método de pago</span><button type="button" class="flow-button" aria-label="Cerrar diálogo" onClick="{{ closePay }}">×</button></div>
+        <div>
+          <div class="flow-heading">MEDIO</div>
+          <div role="radiogroup" aria-label="Medio de pago" style="display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px;">
+            <sc-for list="{{ payKinds }}" as="k" hint-placeholder-count="5">
+              <button type="button" role="radio" onClick="{{ k.select }}" style="font: inherit; font-size: 12px; padding: 7px 13px; border-radius: 8px; cursor: pointer; background: {{ k.bg }}; color: {{ k.fg }}; border: 1px solid {{ k.border }};">{{ k.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+        <sc-if value="{{ payHasField }}"><label style="display: block; font-size: 12px; font-weight: 600;">{{ payFieldLabel }}<input class="flow-field" aria-label="{{ payFieldLabel }}" value="{{ payDetail }}" onChange="{{ onPayDetail }}" placeholder="{{ payPlaceholder }}" maxlength="40"></input></label></sc-if>
+        <sc-if value="{{ payNoField }}"><div style="font-size: 12.5px; color: #5d6b5f; line-height: 1.5;">El pago en efectivo se acuerda en el chat y se entrega al momento del recojo.</div></sc-if>
+        <button type="button" role="checkbox" aria-checked="{{ payAsDefault }}" onClick="{{ togglePayDefault }}" style="font: inherit; display: flex; align-items: center; gap: 10px; background: none; border: none; padding: 0; cursor: pointer; font-size: 12.5px; color: #16281f;"><span style="width: 18px; height: 18px; border-radius: 5px; border: 1px solid #16281f; background: {{ payCheckBg }}; color: #a3d24a; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700;">{{ payCheckMark }}</span>Usar como método predeterminado</button>
+        <sc-if value="{{ payError }}"><div role="alert" style="font-size: 12px; color: #b1573f;">{{ payError }}</div></sc-if>
+        <div style="display: flex; gap: 8px;"><button type="button" class="flow-button flow-primary" onClick="{{ savePayMethod }}">Guardar método</button><button type="button" class="flow-button" onClick="{{ closePay }}">Cancelar</button></div>
+      </div>
+    </div>
+  </sc-if>
 
   <sc-if value="{{ saveDialog }}">
     <div class="flow-overlay">
@@ -1031,6 +1255,7 @@
     </div>
   </sc-if>
 </div>
+</sc-if>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;defaultTab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;mapa&quot;,&quot;recojos&quot;,&quot;chats&quot;,&quot;publicar&quot;,&quot;publicaciones&quot;,&quot;perfil&quot;,&quot;soporte&quot;],&quot;default&quot;:&quot;mapa&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Navegación&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;reciclador&quot;,&quot;generador&quot;],&quot;default&quot;:&quot;reciclador&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Navegación&quot;}}">
 const ICONS = {
@@ -1172,6 +1397,107 @@ const SAVED_ROUTES = [
   { id: "sur", name: "Reciclaje Lima Sur", description: "Miraflores y Surquillo.", stops: ["p8", "p7"] }
 ];
 const TIME_SLOTS = ["08:00–11:00", "11:00–14:00", "14:00–18:00", "18:00–21:00"];
+
+// ---- Cuenta, perfil, documentos, pagos, tickets y notificaciones (simulados).
+const ACCOUNT_TYPES = {
+  ciudadano: { label: "Ciudadano", hint: "Recojo materiales en mi zona", role: "reciclador" },
+  bodega: { label: "Bodega o comercio", hint: "Genero residuos aprovechables", role: "generador" }
+};
+const PROFILE_DEFAULT = { name: "Marco Quispe", email: "marco.q@gmail.com", phone: "+51 924 283 725", bio: "Reciclador independiente en Lima Centro. Recojo cartón, PET y vidrio de lunes a sábado.", mats: ["carton", "pet", "vidrio"], photo: "" };
+const DOCUMENTS = [
+  { id: "d1", type: "DNI", name: "Documento de identidad", state: "Aprobado", date: "12/08/2026" },
+  { id: "d2", type: "Otro", name: "Carné de reciclador", state: "Aprobado", date: "12/08/2026" },
+  { id: "d3", type: "Otro", name: "Constancia municipal", state: "Por vencer", date: "02/03/2026" }
+];
+const DOC_TYPES = ["DNI", "RUC", "Otro"];
+const PAY_KINDS = {
+  yape: { label: "Yape", short: "YAPE", bg: "#742284", fg: "#ffffff", field: "Número de celular", placeholder: "+51 9xx xxx xxx" },
+  plin: { label: "Plin", short: "PLIN", bg: "#0f9d9e", fg: "#ffffff", field: "Número de celular", placeholder: "+51 9xx xxx xxx" },
+  tarjeta: { label: "Tarjeta", short: "VISA", bg: "#1a1f71", fg: "#ffffff", field: "Últimos 4 dígitos", placeholder: "4821" },
+  transferencia: { label: "Transferencia", short: "CCI", bg: "#3d4a3f", fg: "#ffffff", field: "CCI o número de cuenta", placeholder: "002-123-456789012345-67" },
+  efectivo: { label: "Efectivo", short: "EFEC.", bg: "#4c7a2f", fg: "#ffffff", field: "", placeholder: "" }
+};
+const PAY_METHODS = [
+  { id: "m1", kind: "tarjeta", detail: "•••• 4821" },
+  { id: "m2", kind: "yape", detail: "+51 924 ••• 725" }
+];
+const TICKETS = [
+  { id: "#4821", title: "Material distinto al anunciado", category: "Material distinto", state: "Resuelto" },
+  { id: "#4903", title: "No pudo confirmar el QR", category: "Error en la app", state: "En revisión" }
+];
+const TICKET_STATES = { Abierto: ["#e7edf3", "#3d5a73"], "En revisión": ["#fdf3dd", "#8a6a1f"], Resuelto: ["#eef2e4", "#3f6224"] };
+const REPORT_CATEGORIES = ["Incumplimiento", "Material distinto", "Error en la app"];
+const PAY_OPTIONS = ["Sin pago", "Yape", "Efectivo"];
+// Sugerencia de material por palabras clave: simula el clasificador del sistema.
+const SUGGEST_RULES = [
+  { mat: "carton", confidence: 92, keys: ["carton", "caja", "cajas", "corrugado"] },
+  { mat: "papel", confidence: 88, keys: ["papel", "hojas", "oficina", "periodico", "revista"] },
+  { mat: "pet", confidence: 90, keys: ["botella", "botellas", "pet", "plastico", "gaseosa"] },
+  { mat: "vidrio", confidence: 91, keys: ["vidrio", "frasco", "frascos", "vino", "cerveza"] },
+  { mat: "metal", confidence: 86, keys: ["lata", "latas", "metal", "aluminio", "fierro", "chatarra"] },
+  { mat: "electronicos", confidence: 84, keys: ["electr", "celular", "cable", "computador", "laptop", "monitor", "tv"] }
+];
+const NOTIFICATIONS = {
+  reciclador: [
+    { id: "nr1", title: "Recolección aceptada", text: "Juan Flores aceptó tu reclamo de 24 kg de cartón plegado.", time: "HOY · 13:40" },
+    { id: "nr2", title: "Recolección coordinada", text: "Camila Salazar confirmó el recojo de botellas PET para mañana a las 09:00.", time: "HOY · 11:32" },
+    { id: "nr3", title: "En camino", text: "Estás en ruta a Minimarket H&J. Confirma la entrega con el QR al llegar.", time: "HOY · 14:05" },
+    { id: "nr4", title: "Entrega confirmada", text: "9 kg de bolsas de plástico recuperados con Emilia Valencia.", time: "AYER · 17:10" },
+    { id: "nr5", title: "Recolección cancelada", text: "Rest. La Huerta canceló la recolección de vidrio mixto del jueves.", time: "HACE 2 D" },
+    { id: "nr6", title: "Documento por vencer", text: "Tu constancia municipal vence en 15 días. Renuévala desde Documentos.", time: "HACE 3 D" }
+  ],
+  generador: [
+    { id: "ng1", title: "Recolección aceptada", text: "Marco Quispe aceptó tu anuncio de 30 kg de cartón plegado.", time: "HOY · 13:40" },
+    { id: "ng2", title: "Recolección coordinada", text: "Rosa Huamán coordinó el recojo de papel de oficina para hoy 16:00–19:00.", time: "HOY · 12:05" },
+    { id: "ng3", title: "Recolector en camino", text: "Marco Quispe está en camino a Av. Pershing 345. Llega en 18 min.", time: "HOY · 14:10" },
+    { id: "ng4", title: "Entrega confirmada", text: "18 kg de vidrio mixto entregados a Luis Ttito. Ya puedes valorarlo.", time: "HACE 2 D" },
+    { id: "ng5", title: "Recolección cancelada", text: "El reciclador canceló el recojo de botellas PET del martes.", time: "HACE 3 D" },
+    { id: "ng6", title: "Anuncio sin reclamar", text: "Tu anuncio de 6 kg de botellas PET lleva un día sin reclamar.", time: "HACE 3 D" }
+  ]
+};
+const NOTIF_IDS = NOTIFICATIONS.reciclador.concat(NOTIFICATIONS.generador).map(n => n.id);
+const DEFAULT_READ = ["nr4", "nr5", "nr6", "ng4", "ng5", "ng6"];
+const parseJson = (raw, fallback) => { try { const v = JSON.parse(raw || ""); return v == null ? fallback : v; } catch (_) { return fallback; } };
+const validEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test((v || "").trim());
+const validPhone = v => /^\d{9}$/.test((v || "").replace(/^\+?51/, "").replace(/\D/g, ""));
+const shortDate = () => { const d = new Date(); return [String(d.getDate()).padStart(2, "0"), String(d.getMonth() + 1).padStart(2, "0"), d.getFullYear()].join("/"); };
+const cleanText = (v, n) => typeof v === "string" ? v.slice(0, n) : "";
+// Estado de cuenta que viaja en la URL: pantalla de acceso, ediciones del
+// perfil, documentos subidos, métodos de pago, anuncios publicados, tickets y
+// notificaciones leídas. Las fotos (data URL) no caben en un enlace y se quedan
+// solo en memoria.
+const readAccountState = props => {
+  const profile = Object.assign({}, PROFILE_DEFAULT, parseJson(props.profile, {}));
+  profile.name = cleanText(profile.name, 60) || PROFILE_DEFAULT.name;
+  profile.phone = cleanText(profile.phone, 20) || PROFILE_DEFAULT.phone;
+  profile.bio = cleanText(profile.bio, 240);
+  profile.mats = Array.isArray(profile.mats) ? profile.mats.filter(k => MAT_ORDER.includes(k)) : PROFILE_DEFAULT.mats;
+  profile.photo = "";
+  const uploaded = (Array.isArray(parseJson(props.uploaded, [])) ? parseJson(props.uploaded, []) : []).filter(d => d && DOC_TYPES.includes(d.type))
+    .map((d, i) => ({ id: "u" + (i + 1), type: d.type, name: cleanText(d.name, 60) || "Documento", state: "Aprobado", date: cleanText(d.date, 10) || shortDate() }));
+  const methods = (Array.isArray(parseJson(props.methods, [])) ? parseJson(props.methods, []) : []).filter(m => m && PAY_KINDS[m.kind])
+    .map((m, i) => ({ id: "m" + (i + 3), kind: m.kind, detail: cleanText(m.detail, 40) }));
+  const allMethods = PAY_METHODS.concat(methods);
+  const pubs = (Array.isArray(parseJson(props.pubs, [])) ? parseJson(props.pubs, []) : []).filter(p => p && Array.isArray(p.mats))
+    .map((p, i) => ({ id: "n" + (i + 1), mats: p.mats.filter(k => MAT_ORDER.includes(k)), kg: cleanText(p.kg, 8), window: cleanText(p.window, 40), pay: PAY_OPTIONS.includes(p.pay) ? p.pay : "Sin pago", note: cleanText(p.note, 240) }))
+    .filter(p => p.mats.length && p.kg);
+  const tickets = (Array.isArray(parseJson(props.tickets, [])) ? parseJson(props.tickets, []) : []).filter(t => t && REPORT_CATEGORIES.includes(t.category))
+    .map((t, i) => ({ id: "#" + (4950 + i), title: cleanText(t.title, 80) || t.category, category: t.category, state: "Abierto", evidence: !!t.evidence }));
+  return {
+    screen: ["login", "register"].includes(props.screen) ? props.screen : "",
+    account: ACCOUNT_TYPES[props.account] ? props.account : "",
+    profile, editProfile: props.edit === "perfil", docsOpen: props.docs === "1", uploadedDocs: uploaded,
+    payOpen: props.pay === "1", extraMethods: methods, payDefault: allMethods.some(m => m.id === props.payDefault) ? props.payDefault : "m1",
+    newPubs: pubs, newTickets: tickets,
+    notifOpen: props.notif === "1", readIds: props.read != null ? props.read.split(",").filter(id => NOTIF_IDS.includes(id)) : DEFAULT_READ.slice(),
+    // Campos de formulario: viven solo mientras se escribe, como `reason` o `draft`.
+    authForm: { name: "", email: "", phone: "", password: "" }, authErrors: {},
+    profileForm: props.edit === "perfil" ? Object.assign({}, profile, { mats: profile.mats.slice() }) : null, profileErrors: {}, docType: "DNI", docFile: null, docError: "",
+    payKind: "yape", payDetail: "", payAsDefault: true, payError: "",
+    pubDay: "", pubTime: "", pubPay: "Sin pago", note: "", photo: "", photoName: "", pubErrors: {}, dismissedSuggestion: "",
+    reportCategory: "Incumplimiento", reportText: "", reportFile: "", reportError: "", reportNotice: ""
+  };
+};
 const todayDate = () => { const d = new Date(); return [d.getFullYear(), String(d.getMonth()+1).padStart(2,"0"), String(d.getDate()).padStart(2,"0")].join("-"); };
 const validDate = value => /^\d{4}-\d{2}-\d{2}$/.test(value || "") && !isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0,10) === value;
 const validStops = ids => [...new Set(ids)].filter(id => ROUTE_LOCATIONS.some(p => p.id === id));
@@ -1234,6 +1560,7 @@ class Component extends DCLogic {
     role: TAB_ROLE[(this.props || {}).defaultTab || "mapa"] ? null : ((this.props || {}).role || null),
     ...readMapState(this.props || {}),
     ...readFlowState(this.props || {}),
+    ...readAccountState(this.props || {}),
     savedRoutes: SAVED_ROUTES.map(r => Object.assign({}, r, { stops: r.stops.slice() })),
     nextRouteId: 1,
     claimed: { a1: true, a2: true }, // anuncios reclamados (ids de ADS)
@@ -1252,7 +1579,10 @@ class Component extends DCLogic {
   readMapRoute(query) {
     const props = Object.fromEntries(query);
     this.trackingClock = null;
-    return Object.assign(readMapState(props), readFlowState(props), { rateOpen: false });
+    const photo = this.state.profile.photo;
+    const account = readAccountState(props);
+    account.profile.photo = photo;
+    return Object.assign(readMapState(props), readFlowState(props), account, { rateOpen: false });
   }
   routeParams() {
     const map = { view: this.state.mapView, q: this.state.search, material: this.state.mapMaterial,
@@ -1269,11 +1599,124 @@ class Component extends DCLogic {
       priority: priorities.join(","), updates: Object.keys(updates).length ? JSON.stringify(updates) : "",
       thread: this.tab()==="chats" ? this.state.thread : "", chatRow: this.tab()==="chats" ? this.state.chatRow : "",
       track: this.role()==="generador" && ["publicaciones","chats"].includes(this.tab()) ? this.state.tracking : "",
-      progress: this.state.tracking ? String(this.state.trackingStart) : "", date: "", slot: "" });
+      progress: this.state.tracking ? String(this.state.trackingStart) : "", date: "", slot: "" }, this.accountParams());
+  }
+  accountParams() {
+    const s = this.state, tab = this.tab();
+    const profile = {};
+    ["name", "phone", "bio"].forEach(k => { if (s.profile[k] !== PROFILE_DEFAULT[k]) profile[k] = s.profile[k]; });
+    if (s.profile.mats.join() !== PROFILE_DEFAULT.mats.join()) profile.mats = s.profile.mats;
+    return {
+      screen: s.screen, account: s.screen ? s.account : "",
+      profile: Object.keys(profile).length ? JSON.stringify(profile) : "",
+      edit: tab === "perfil" && s.editProfile ? "perfil" : "", docs: tab === "perfil" && s.docsOpen ? "1" : "",
+      uploaded: s.uploadedDocs.length ? JSON.stringify(s.uploadedDocs.map(d => ({ type: d.type, name: d.name, date: d.date }))) : "",
+      pay: tab === "perfil" && s.payOpen ? "1" : "", payDefault: s.payDefault === "m1" ? "" : s.payDefault,
+      methods: s.extraMethods.length ? JSON.stringify(s.extraMethods.map(m => ({ kind: m.kind, detail: m.detail }))) : "",
+      pubs: s.newPubs.length ? JSON.stringify(s.newPubs.map(p => ({ mats: p.mats, kg: p.kg, window: p.window, pay: p.pay, note: p.note }))) : "",
+      tickets: s.newTickets.length ? JSON.stringify(s.newTickets.map(t => ({ title: t.title, category: t.category, evidence: t.evidence }))) : "",
+      notif: !s.screen && s.notifOpen ? "1" : "", read: s.readIds.join() === DEFAULT_READ.join() ? "" : s.readIds.join(",")
+    };
+  }
+
+  // ---- Acceso
+  enterApp(type) {
+    const role = ACCOUNT_TYPES[type].role;
+    this.setState({ screen: "", account: type, tab: role === "generador" ? "publicar" : "mapa", role: null, authErrors: {}, authForm: { name: "", email: "", phone: "", password: "" }, notifOpen: false });
+  }
+  submitAuth() {
+    const f = this.state.authForm, errors = {}, register = this.state.screen === "register";
+    if (register && f.name.trim().split(/\s+/).length < 2) errors.name = "Escribe tu nombre y apellidos.";
+    if (!validEmail(f.email)) errors.email = "Ingresa un correo válido, como nombre@dominio.com.";
+    if (register && !validPhone(f.phone)) errors.phone = "El teléfono debe tener 9 dígitos (formato peruano).";
+    if (f.password.length < 8) errors.password = register ? "La contraseña debe tener al menos 8 caracteres." : "Ingresa tu contraseña (mínimo 8 caracteres).";
+    if (!this.state.account) errors.account = "Elige un tipo de cuenta para continuar.";
+    if (Object.keys(errors).length) return this.setState({ authErrors: errors });
+    this.enterApp(this.state.account);
+  }
+  socialAuth() {
+    if (!this.state.account) return this.setState({ authErrors: { account: "Elige un tipo de cuenta antes de continuar con Google o Facebook." } });
+    this.enterApp(this.state.account);
+  }
+  logout() {
+    this.setState({ screen: "login", account: "", authErrors: {}, notifOpen: false, editProfile: false, docsOpen: false, payOpen: false, menuRow: null, dialog: "", tracking: null });
+  }
+  // Lee un archivo del <input type="file"> y devuelve nombre y data URL.
+  readFile(e, cb) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) return cb(file.name, "");
+    const reader = new FileReader();
+    reader.onload = () => cb(file.name, String(reader.result));
+    reader.readAsDataURL(file);
+  }
+
+  // ---- Perfil
+  openEditProfile() { this.setState({ editProfile: true, profileForm: Object.assign({}, this.state.profile, { mats: this.state.profile.mats.slice() }), profileErrors: {} }); }
+  saveProfile() {
+    const f = this.state.profileForm, errors = {};
+    if (!f.name.trim()) errors.name = "El nombre no puede quedar vacío.";
+    if (!validPhone(f.phone)) errors.phone = "Ingresa un teléfono de 9 dígitos.";
+    if (!f.mats.length) errors.mats = "Elige al menos un material.";
+    if (Object.keys(errors).length) return this.setState({ profileErrors: errors });
+    this.setState({ profile: { name: f.name.trim().slice(0, 60), email: this.state.profile.email, phone: f.phone.trim().slice(0, 20), bio: f.bio.trim().slice(0, 240), mats: f.mats.slice(), photo: f.photo }, editProfile: false, profileForm: null, profileErrors: {} });
+  }
+  uploadDoc() {
+    const file = this.state.docFile;
+    if (!file) return this.setState({ docError: "Selecciona un archivo (PDF o imagen) antes de subirlo." });
+    const id = "u" + (this.state.uploadedDocs.length + 1);
+    this.setState(s => ({ uploadedDocs: s.uploadedDocs.concat({ id, type: s.docType, name: file.slice(0, 60), state: "Aprobado", date: shortDate() }), docFile: null, docError: "", docType: "DNI" }));
+  }
+  savePayMethod() {
+    const kind = PAY_KINDS[this.state.payKind], detail = this.state.payDetail.trim();
+    if (kind.field && !detail) return this.setState({ payError: "Completa el campo " + kind.field.toLowerCase() + "." });
+    if (this.state.payKind === "tarjeta" && !/^\d{4}$/.test(detail)) return this.setState({ payError: "Ingresa los últimos 4 dígitos de la tarjeta." });
+    if (["yape", "plin"].includes(this.state.payKind) && !validPhone(detail)) return this.setState({ payError: "Ingresa un celular de 9 dígitos." });
+    const id = "m" + (this.state.extraMethods.length + 3);
+    const shown = this.state.payKind === "tarjeta" ? "•••• " + detail : ["yape", "plin"].includes(this.state.payKind) ? detail.replace(/(\d{3})\s?\d{3}\s?(\d{3})$/, "$1 ••• $2") : detail || "Pago en mano al entregar";
+    this.setState(s => ({ extraMethods: s.extraMethods.concat({ id, kind: s.payKind, detail: shown.slice(0, 40) }), payDefault: s.payAsDefault ? id : s.payDefault, payOpen: false, payDetail: "", payError: "", payKind: "yape", payAsDefault: true }));
+  }
+
+  // ---- Publicar
+  suggestion() {
+    const source = normalizeSearch(this.state.note + " " + this.state.photoName);
+    if (!source.trim()) return null;
+    const origin = this.state.photoName ? "foto" : "nota";
+    // La primera regla que coincide y cuyo material aún no está marcado ni fue rechazada.
+    const rule = SUGGEST_RULES.find(r => r.keys.some(k => source.includes(k)) && !this.state.materials[r.mat] && this.state.dismissedSuggestion !== r.mat + ":" + origin);
+    if (!rule) return null;
+    const key = rule.mat + ":" + origin;
+    return { key, mat: rule.mat, label: MATERIALS[rule.mat].label, confidence: rule.confidence + (this.state.photoName ? 4 : 0), source: this.state.photoName ? "la foto" : "la nota" };
+  }
+  publishAd() {
+    const s = this.state, errors = {}, qty = parseFloat((s.qty || "").replace(",", "."));
+    const mats = MAT_ORDER.filter(k => s.materials[k]);
+    if (!s.qty) errors.qty = "Ingresa la cantidad aproximada en kilos.";
+    else if (!(qty > 0)) errors.qty = "La cantidad debe ser mayor que cero.";
+    if (!mats.length) errors.mats = "Elige al menos un tipo de material.";
+    if (!s.pubDay.trim() || !s.pubTime.trim()) errors.window = "Indica el día y el rango de horas en que pueden pasar.";
+    if (Object.keys(errors).length) return this.setState({ pubErrors: errors });
+    const pub = { id: "n" + (s.newPubs.length + 1), mats, kg: s.qty + " kg", window: (s.pubDay.trim() + " " + s.pubTime.trim()).toUpperCase().slice(0, 40), pay: s.pubPay, note: s.note.trim().slice(0, 240) };
+    this.setState({ newPubs: s.newPubs.concat(pub), pubErrors: {}, qty: "", materials: {}, pubDay: "", pubTime: "", pubPay: "Sin pago", note: "", photo: "", photoName: "", dismissedSuggestion: "" });
+    this.navigate("publicaciones");
+  }
+  newPublicationRow(p) {
+    const mat = MATERIALS[p.mats[0]];
+    return { id: p.id, kg: p.kg, material: p.mats.map(k => MATERIALS[k].label).join(", "), posted: "Publicado ahora · " + p.pay, person: "Sin reclamar", personFg: "#8b9186", window: p.window, state: "Esperando", stateBg: "#fdf3dd", stateFg: "#8a6a1f",
+      rowBg: "#ffffff", priority: false, menuOpen: false, toggleMenu: () => {}, locked: false, lockHint: "", priorityLabel: "", togglePriority: () => {}, reschedule: () => {}, cancel: () => {}, openScanner: () => {}, openChat: () => {}, canTrack: false, track: () => {}, isNew: true, color: mat.color };
+  }
+
+  // ---- Soporte
+  sendReport() {
+    const text = this.state.reportText.trim();
+    if (!text) return this.setState({ reportError: "Cuéntanos qué pasó antes de enviar el reporte." });
+    const id = "#" + (4950 + this.state.newTickets.length);
+    this.setState(s => ({ newTickets: s.newTickets.concat({ id, title: text.slice(0, 80), category: s.reportCategory, state: "Abierto", evidence: !!s.reportFile }),
+      reportText: "", reportFile: "", reportError: "", reportNotice: "Ticket " + id + " creado. Te respondemos en menos de 12 minutos." }));
   }
 
   navigate(tab, extra = {}) {
-    this.setState(Object.assign({ tab, role: TAB_ROLE[tab] ? null : this.role(), menuRow: null, dialog: "", actionRow: null, tracking: null }, extra));
+    this.setState(Object.assign({ tab, role: TAB_ROLE[tab] ? null : this.role(), menuRow: null, dialog: "", actionRow: null, tracking: null, notifOpen: false, editProfile: false, docsOpen: false, payOpen: false }, extra));
   }
   delivery(id) {
     const row = PICKUPS.concat(PUBLICATIONS).find(r=>r.id===id);
@@ -1491,7 +1934,8 @@ class Component extends DCLogic {
     });
 
     const pickupRows = PICKUPS.map(p => this.deliveryRow(p));
-    const publicationRows = PUBLICATIONS.map(p => this.deliveryRow(p));
+    const newPubRows = this.state.newPubs.map(p => this.newPublicationRow(p)).reverse();
+    const publicationRows = newPubRows.concat(PUBLICATIONS.map(p => this.deliveryRow(p)));
     const activePickups=pickupRows.filter(r=>!["Completado","Cancelado"].includes(r.state)).length;
     const activePublications=publicationRows.filter(r=>!["Completado","Cancelado"].includes(r.state)).length;
     const completedPickups=30+pickupRows.filter((r,i)=>r.state==="Completado" && PICKUPS[i].state!=="Completado").length;
@@ -1519,6 +1963,23 @@ class Component extends DCLogic {
       border: m.from === "me" ? "#16281f" : "#e2e5dc",
       metaFg: m.from === "me" ? "#8fa392" : "#8b9186"
     }));
+
+    const st = this.state, pf = st.profileForm;
+    const authField = k => e => this.setState(s => ({ authForm: Object.assign({}, s.authForm, { [k]: e.target.value.slice(0, 80) }), authErrors: Object.assign({}, s.authErrors, { [k]: "" }) }));
+    const pfField = k => e => this.setState(s => ({ profileForm: Object.assign({}, s.profileForm, { [k]: e.target.value.slice(0, k === "bio" ? 240 : 60) }), profileErrors: Object.assign({}, s.profileErrors, { [k]: "" }) }));
+    const accountCards = Object.keys(ACCOUNT_TYPES).map(k => ({
+      key: k, label: ACCOUNT_TYPES[k].label, hint: ACCOUNT_TYPES[k].hint, roleLabel: ACCOUNT_TYPES[k].role === "generador" ? "GENERADOR" : "RECICLADOR",
+      on: st.account === k, border: st.account === k ? "#16281f" : "#d8dcd2", bg: st.account === k ? "#eef2e4" : "#ffffff", shadow: st.account === k ? "0 2px 0 #16281f" : "none",
+      icon: { __html: ACCOUNT_TYPES[k].role === "generador" ? POINT_TYPES.bodega.icon : ICONS.perfil },
+      select: () => this.setState(s => ({ account: k, authErrors: Object.assign({}, s.authErrors, { account: "" }) }))
+    }));
+    const notifications = NOTIFICATIONS[this.role()].map(n => {
+      const unread = !st.readIds.includes(n.id);
+      return Object.assign({}, n, { unread, bg: unread ? "#f7f9f2" : "#ffffff", dot: unread ? "#4c7a2f" : "#d8dcd2", weight: unread ? "600" : "500",
+        markRead: () => this.setState(s => ({ readIds: s.readIds.includes(n.id) ? s.readIds : s.readIds.concat(n.id) })) });
+    });
+    const unreadCount = notifications.filter(n => n.unread).length;
+    const suggestion = this.suggestion();
 
     const send = () => {
       const text = (this.state.draft || "").trim();
@@ -1648,9 +2109,106 @@ class Component extends DCLogic {
       previewIconFg: pickedMats.length ? previewMat.fg : "#a8b2a2",
       previewIcon: { __html: previewMat.icon },
       publishHint: pickedMats.length ? "Visible para 14 recicladores cerca" : "Elige al menos un material",
-      publish: () => this.setState({ tab: "publicaciones" }),
+      publish: () => this.publishAd(),
 
       faqs, stars,
+
+      // ---- Acceso
+      authOpen: !!st.screen, appOpen: !st.screen,
+      isLogin: st.screen === "login", isRegister: st.screen === "register",
+      authTitle: st.screen === "register" ? "Crea tu cuenta" : "Bienvenido de vuelta",
+      authSubtitle: st.screen === "register" ? "Conecta con recicladores y generadores de tu zona en menos de un minuto." : "Ingresa para ver tus recojos, anuncios y mensajes.",
+      authName: st.authForm.name, authEmail: st.authForm.email, authPhone: st.authForm.phone, authPassword: st.authForm.password,
+      onAuthName: authField("name"), onAuthEmail: authField("email"), onAuthPhone: authField("phone"), onAuthPassword: authField("password"),
+      errName: st.authErrors.name || "", errEmail: st.authErrors.email || "", errPhone: st.authErrors.phone || "", errPassword: st.authErrors.password || "", errAccount: st.authErrors.account || "",
+      accountCards, submitAuth: () => this.submitAuth(), socialAuth: () => this.socialAuth(),
+      authKey: e => { if (e.key === "Enter") this.submitAuth(); },
+      goLogin: () => this.setState({ screen: "login", authErrors: {} }), goRegister: () => this.setState({ screen: "register", authErrors: {} }),
+      authButton: st.screen === "register" ? "Crear cuenta" : "Entrar",
+      authHeading: st.screen === "register" ? "CREAR CUENTA" : "INICIAR SESIÓN",
+      passwordSpan: st.screen === "register" ? "auto" : "span 2",
+      noAvatarPhoto: !st.profile.photo,
+      pfNoPhoto: !(pf && pf.photo), noDocFile: !st.docFile, payNoField: !PAY_KINDS[st.payKind].field,
+      noPhoto: !st.photo, noReportFile: !st.reportFile,
+
+      // ---- Cabecera: notificaciones
+      unreadCount, hasUnread: unreadCount > 0, notifOpen: st.notifOpen,
+      toggleNotif: () => this.setState({ notifOpen: !st.notifOpen }), closeNotif: () => this.setState({ notifOpen: false }),
+      notifications, notifEmpty: !notifications.length, allRead: unreadCount === 0,
+      markAllRead: () => this.setState({ readIds: [...new Set(st.readIds.concat(NOTIFICATIONS[this.role()].map(n => n.id)))] }),
+      notifKey: e => { if (e.key === "Escape") this.setState({ notifOpen: false }); },
+
+      // ---- Perfil
+      avatarInitial: st.profile.name.trim()[0] || "M", avatarPhoto: st.profile.photo, hasAvatarPhoto: !!st.profile.photo,
+      profileName: st.profile.name, profileRoleLine: (isGen ? "Generador" : "Reciclador") + " · Lima Centro",
+      profileEmail: st.profile.email, profilePhone: st.profile.phone, profileBio: st.profile.bio,
+      profileMats: st.profile.mats.map(k => MATERIALS[k].label).join(", ") || "Sin materiales",
+      openEditProfile: () => this.openEditProfile(), logout: () => this.logout(),
+      editProfile: st.editProfile && !!pf,
+      pfName: pf ? pf.name : "", pfPhone: pf ? pf.phone : "", pfBio: pf ? pf.bio : "", pfPhoto: pf ? pf.photo : "", pfHasPhoto: !!(pf && pf.photo),
+      pfInitial: pf && pf.name.trim() ? pf.name.trim()[0] : "M",
+      onPfName: pfField("name"), onPfPhone: pfField("phone"), onPfBio: pfField("bio"),
+      onPfPhoto: e => this.readFile(e, (name, url) => { if (url) this.setState(s => ({ profileForm: Object.assign({}, s.profileForm, { photo: url }) })); }),
+      removePfPhoto: () => this.setState(s => ({ profileForm: Object.assign({}, s.profileForm, { photo: "" }) })),
+      pfMatChips: MAT_ORDER.map(k => Object.assign(this.chip(MATERIALS[k].label, !!(pf && pf.mats.includes(k)), "#a3d24a", "#16281f"), {
+        toggle: () => this.setState(s => ({ profileForm: Object.assign({}, s.profileForm, { mats: s.profileForm.mats.includes(k) ? s.profileForm.mats.filter(m => m !== k) : s.profileForm.mats.concat(k) }) }))
+      })),
+      pfErrName: st.profileErrors.name || "", pfErrPhone: st.profileErrors.phone || "", pfErrMats: st.profileErrors.mats || "",
+      saveProfile: () => this.saveProfile(), closeEdit: () => this.setState({ editProfile: false, profileForm: null, profileErrors: {} }),
+      editKey: e => this.modalKey(e, () => this.setState({ editProfile: false, profileForm: null, profileErrors: {} })),
+
+      docsOpen: st.docsOpen, openDocs: () => this.setState({ docsOpen: true, docError: "", docFile: null }), closeDocs: () => this.setState({ docsOpen: false, docError: "" }),
+      docsKey: e => this.modalKey(e, () => this.setState({ docsOpen: false })),
+      documents: DOCUMENTS.concat(st.uploadedDocs).map(d => Object.assign({}, d, {
+        dot: d.state === "Aprobado" ? "#4c7a2f" : "#e8b53a", stateFg: d.state === "Aprobado" ? "#4c7a2f" : "#8a6a1f", stateLabel: d.state.toUpperCase(), fresh: d.id.startsWith("u")
+      })),
+      approvedCount: DOCUMENTS.concat(st.uploadedDocs).filter(d => d.state === "Aprobado").length,
+      docTypes: DOC_TYPES.map(t => Object.assign(this.chip(t, st.docType === t), { select: () => this.setState({ docType: t }) })),
+      docFileName: st.docFile || "", hasDocFile: !!st.docFile,
+      onDocFile: e => this.readFile(e, name => this.setState({ docFile: name, docError: "" })),
+      uploadDoc: () => this.uploadDoc(), docError: st.docError,
+
+      payments: PAY_METHODS.concat(st.extraMethods).map(m => ({
+        id: m.id, label: PAY_KINDS[m.kind].short, bg: PAY_KINDS[m.kind].bg, fg: PAY_KINDS[m.kind].fg, detail: m.detail,
+        isDefault: st.payDefault === m.id, canUse: st.payDefault !== m.id, use: () => this.setState({ payDefault: m.id })
+      })),
+      payOpen: st.payOpen, openPay: () => this.setState({ payOpen: true, payError: "", payDetail: "", payKind: "yape", payAsDefault: true }),
+      closePay: () => this.setState({ payOpen: false, payError: "" }), payKey: e => this.modalKey(e, () => this.setState({ payOpen: false })),
+      payKinds: Object.keys(PAY_KINDS).map(k => Object.assign(this.chip(PAY_KINDS[k].label, st.payKind === k), { select: () => this.setState({ payKind: k, payError: "", payDetail: "" }) })),
+      payHasField: !!PAY_KINDS[st.payKind].field, payFieldLabel: PAY_KINDS[st.payKind].field, payPlaceholder: PAY_KINDS[st.payKind].placeholder,
+      payDetail: st.payDetail, onPayDetail: e => this.setState({ payDetail: e.target.value, payError: "" }),
+      payAsDefault: st.payAsDefault, togglePayDefault: () => this.setState({ payAsDefault: !st.payAsDefault }),
+      payCheckBg: st.payAsDefault ? "#16281f" : "#ffffff", payCheckMark: st.payAsDefault ? "✓" : "",
+      savePayMethod: () => this.savePayMethod(), payError: st.payError,
+
+      // ---- Publicar
+      pubDay: st.pubDay, pubTime: st.pubTime,
+      onPubDay: e => this.setState({ pubDay: e.target.value.slice(0, 20) }), onPubTime: e => this.setState({ pubTime: e.target.value.slice(0, 20) }),
+      payChips: PAY_OPTIONS.map(o => ({ label: o, border: st.pubPay === o ? "#16281f" : "#d8dcd2", weight: st.pubPay === o ? "600" : "400", select: () => this.setState({ pubPay: o }) })),
+      note: st.note, onNote: e => this.setState({ note: e.target.value.slice(0, 240) }),
+      photo: st.photo, hasPhoto: !!st.photo, photoName: st.photoName,
+      onPhoto: e => this.readFile(e, (name, url) => this.setState({ photo: url, photoName: name, dismissedSuggestion: "" })),
+      removePhoto: () => this.setState({ photo: "", photoName: "" }),
+      errQty: st.pubErrors.qty || "", errMats: st.pubErrors.mats || "", errWindow: st.pubErrors.window || "",
+      qtyBorder: st.pubErrors.qty ? "#b1573f" : "#e2e5dc", windowBorder: st.pubErrors.window ? "#b1573f" : "#e2e5dc",
+      hasSuggestion: !!suggestion,
+      suggestionText: suggestion ? "Por " + suggestion.source + ", parece " + suggestion.label + "." : "",
+      suggestionConfidence: suggestion ? "CONFIANZA " + suggestion.confidence + "%" : "",
+      applySuggestion: () => { if (suggestion) this.setState(s => ({ materials: Object.assign({}, s.materials, { [suggestion.mat]: true }), pubErrors: Object.assign({}, s.pubErrors, { mats: "" }) })); },
+      dismissSuggestion: () => { if (suggestion) this.setState({ dismissedSuggestion: suggestion.key }); },
+      previewWindow: (st.pubDay.trim() || st.pubTime.trim()) ? (st.pubDay.trim() + " " + st.pubTime.trim()).trim().toUpperCase() : "SIN HORARIO",
+      previewPay: st.pubPay.toUpperCase(),
+      newPubCount: st.newPubs.length,
+
+      // ---- Soporte
+      reportChips: REPORT_CATEGORIES.map(c => ({ label: c, border: st.reportCategory === c ? "#16281f" : "#d8dcd2", weight: st.reportCategory === c ? "600" : "400", select: () => this.setState({ reportCategory: c }) })),
+      reportText: st.reportText, onReportText: e => this.setState({ reportText: e.target.value.slice(0, 500), reportError: "" }),
+      reportFile: st.reportFile, hasReportFile: !!st.reportFile,
+      onReportFile: e => this.readFile(e, name => this.setState({ reportFile: name })),
+      removeReportFile: () => this.setState({ reportFile: "" }),
+      sendReport: () => this.sendReport(), reportError: st.reportError, reportNotice: st.reportNotice,
+      tickets: st.newTickets.slice().reverse().concat(TICKETS).map(t => ({ id: t.id, title: t.title, state: t.state, bg: TICKET_STATES[t.state][0], fg: TICKET_STATES[t.state][1], meta: t.category + (t.evidence ? " · con evidencia" : "") })),
+
       scannerOpen:!isGen && actionDelivery && this.state.dialog==="qr" && actionDelivery.code,
       scannerTitle:actionDelivery ? actionDelivery.place+" · "+actionDelivery.kg : "",
       scannerClosed:lockedAction, manualCode:this.state.manualCode,

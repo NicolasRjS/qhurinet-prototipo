@@ -106,6 +106,25 @@ el generador publicó y quién lo está recogiendo.
 Dos modales cruzan todas las pantallas: el **escáner QR** que confirma la
 entrega y la **valoración** posterior.
 
+### Cuenta, perfil y notificaciones
+
+Antes de la aplicación hay una pantalla de acceso, y dentro de Perfil, Publicar
+y Soporte hay estados que también viajan en la URL:
+
+| Estado                              | Parámetros                                         |
+| ----------------------------------- | -------------------------------------------------- |
+| Inicio de sesión / registro         | `?screen=login` · `?screen=register` (+ `account=ciudadano\|bodega`) |
+| Centro de notificaciones            | `notif=1` abre el panel · `read=nr1,ng2,…` marca leídas |
+| Editar perfil                       | `defaultTab=perfil&edit=perfil` · cambios guardados en `profile={…}` |
+| Documentos de verificación          | `defaultTab=perfil&docs=1` · subidos en `uploaded=[…]` |
+| Método de pago                      | `defaultTab=perfil&pay=1` · nuevos en `methods=[…]` · `payDefault=m2` |
+| Anuncios publicados desde Publicar  | `pubs=[…]` (aparecen en Anuncios)                  |
+| Tickets creados desde Soporte       | `tickets=[…]`                                      |
+
+Ciudadano entra como reciclador y bodega o comercio como generador. Las fotos
+(perfil, anuncio, evidencia) se leen del archivo elegido y viven solo en
+memoria: un data URL no cabe en un enlace.
+
 ### Propiedades configurables
 
 `defaultTab` (enum) elige la pestaña inicial. Si apunta a una pantalla exclusiva
