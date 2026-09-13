@@ -260,27 +260,28 @@
   // ------------------------------------------------------------------ rutas
 
   // Las siete pantallas viven en un solo archivo y se cambian con setState, que
-  // no es una navegacion: sin esto la barra de direcciones nunca se movia. El
-  // hash no viaja al servidor, asi que funciona igual en file:// y en Pages.
+  // no es una navegacion: sin esto la barra de direcciones nunca se movia. La
+  // pestana y el rol visibles se escriben en el query string con los mismos
+  // nombres que las props (`?role=generador&defaultTab=chats`), asi que el link
+  // que se copia de la barra es el mismo que se escribe a mano. Un solo
+  // mecanismo: antes el hash tambien contaba y ganaba sobre el query, y
+  // `?defaultTab=publicar#mapa` abria el mapa.
 
-  // Pestanas validas, tomadas del enum de `data-props`. Hacen falta para saber
-  // que en `#generador/chats` el rol es el segmento que NO es una pestana.
-  var TABS = [];
+  // Enums de `data-props` (defaultTab, role): validan lo que llega por URL.
+  var OPTIONS = {};
 
-  function parseHash() {
-    var parts = (location.hash || "").replace(/^#\/?/, "").split("/").filter(Boolean);
-    var tab = null;
-    var role = null;
-    parts.forEach(function (part) {
-      if (TABS.indexOf(part) !== -1) tab = part;
-      else role = part;
-    });
-    // Sin pestana valida el hash no dice nada: mejor ignorarlo que inventar.
-    return tab ? { tab: tab, role: role } : null;
+  function validOption(key, value) {
+    return !OPTIONS[key] || OPTIONS[key].indexOf(value) !== -1;
   }
 
-  function formatHash(tab, role) {
-    return "#" + (role ? role + "/" : "") + tab;
+  function readRoute() {
+    var query = new URLSearchParams(location.search);
+    var tab = query.get("defaultTab");
+    var role = query.get("role");
+    return {
+      tab: tab && validOption("defaultTab", tab) ? tab : null,
+      role: role && validOption("role", role) ? role : null
+    };
   }
 
   // ---------------------------------------------------------------- arranque
@@ -294,16 +295,19 @@
         for (var key in spec) {
           if (spec[key] && "default" in spec[key]) props[key] = spec[key]["default"];
         }
-        if (spec.defaultTab && spec.defaultTab.options) TABS = spec.defaultTab.options.slice();
+        for (var name in spec) {
+          if (spec[name] && spec[name].options) OPTIONS[name] = spec[name].options.slice();
+        }
       } catch (e) {
         console.warn("[dc] data-props ilegible:", e);
       }
     }
-    // Permite fijar una pantalla desde la barra de direcciones para demostrar:
-    //   index.html?defaultTab=publicar
+    // Deep link: las props se pueden fijar desde la barra de direcciones.
+    //   index.html?role=generador&defaultTab=chats
     var query = new URLSearchParams(location.search);
     query.forEach(function (value, key) {
-      props[key] = value;
+      if (validOption(key, value)) props[key] = value;
+      else console.warn("[dc] ?" + key + "=" + value + " no esta entre las opciones; se ignora");
     });
     return props;
   }
@@ -342,34 +346,27 @@
     var instance = new Component(defaultProps(script));
     var queued = false;
     var painted = false;
-    var selfWrite = null;
 
-    // El hash manda sobre `?defaultTab=`: es lo que queda al compartir el link.
-    var initial = parseHash();
-    if (initial && instance.state) {
-      instance.state.tab = initial.tab;
-      instance.state.role = initial.role;
-    }
-
-    // Escribe la pestana visible en la URL. En el primer pintado se reemplaza
-    // la entrada en vez de apilar una, para que "atras" salga del sitio y no
-    // se quede rebotando contra la URL sin hash con la que se entro.
-    function syncHash(replace) {
-      if (!TABS.length || !instance.state) return;
+    // Escribe pestana y rol visibles en el query string. `role` solo va cuando
+    // esta fijado en el estado (pestanas compartidas); en las exclusivas lo
+    // implica la pestana. El primer pintado reemplaza la entrada en vez de
+    // apilar una, para que "atras" salga del sitio. Se descarta cualquier hash.
+    function syncUrl(replace) {
+      if (!instance.state) return;
       var tab = instance.state.tab || instance.props.defaultTab;
-      if (TABS.indexOf(tab) === -1) return;
-      var next = formatHash(tab, instance.state.role || null);
-      if (location.hash === next) return;
-      if (replace) {
-        try {
-          history.replaceState(null, "", next);
-          return;
-        } catch (e) {
-          // file:// no permite replaceState (origen "null"): se apila y ya.
-        }
+      if (!tab || !validOption("defaultTab", tab)) return;
+      var query = new URLSearchParams(location.search);
+      query.set("defaultTab", tab);
+      if (instance.state.role) query.set("role", instance.state.role);
+      else query.delete("role");
+      var next = location.pathname + "?" + query.toString();
+      if (location.pathname + location.search + location.hash === next) return;
+      try {
+        history[replace ? "replaceState" : "pushState"](null, "", next);
+      } catch (e) {
+        // file:// no deja tocar el historial (origen "null"). El deep link por
+        // query sigue funcionando al abrir; solo no se refleja al navegar.
       }
-      selfWrite = next;
-      location.hash = next;
     }
 
     function draw() {
@@ -384,7 +381,7 @@
       mount.innerHTML = "";
       while (next.firstChild) mount.appendChild(next.firstChild);
       restoreFocus(mount, snapshot);
-      syncHash(!painted);
+      syncUrl(!painted);
       painted = true;
     }
 
@@ -400,15 +397,12 @@
 
     draw();
 
-    // Atras/adelante. Se ignora el evento que dispara nuestra propia escritura.
-    window.addEventListener("hashchange", function () {
-      var mine = selfWrite !== null && location.hash === selfWrite;
-      selfWrite = null;
-      if (mine) return;
-      var route = parseHash();
-      // Volver a la entrada sin hash: se repone sin apilar otra.
-      if (!route) return syncHash(true);
-      instance.setState({ tab: route.tab, role: route.role || null });
+    // Atras/adelante: pushState no dispara popstate, asi que aqui solo llegan
+    // las navegaciones del usuario. Una entrada sin pestana se normaliza.
+    window.addEventListener("popstate", function () {
+      var route = readRoute();
+      if (!route.tab) return syncUrl(true);
+      instance.setState({ tab: route.tab, role: route.role });
     });
   }
 

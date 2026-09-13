@@ -867,7 +867,7 @@
   </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;defaultTab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;mapa&quot;,&quot;recojos&quot;,&quot;chats&quot;,&quot;publicar&quot;,&quot;publicaciones&quot;,&quot;perfil&quot;,&quot;soporte&quot;],&quot;default&quot;:&quot;mapa&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Navegación&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;defaultTab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;mapa&quot;,&quot;recojos&quot;,&quot;chats&quot;,&quot;publicar&quot;,&quot;publicaciones&quot;,&quot;perfil&quot;,&quot;soporte&quot;],&quot;default&quot;:&quot;mapa&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Navegación&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;reciclador&quot;,&quot;generador&quot;],&quot;default&quot;:&quot;reciclador&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Navegación&quot;}}">
 const ICONS = {
   mapa: '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6.5 L9.5 4 L15 6.5 L21 4 V17.5 L15 20 L9.5 17.5 L3 20 Z M9.5 4 V17.5 M15 6.5 V20"/></svg>',
   recojos: '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6 H20 M4 12 H20 M4 18 H14"/></svg>',
@@ -952,7 +952,12 @@ const FAQ_DATA = [
 
 class Component extends DCLogic {
   state = {
-    tab: null, role: null,
+    tab: null,
+    // La prop `role` fija el rol inicial solo en Chats, Perfil y Soporte, que
+    // existen en los dos lados. En las pestañas exclusivas manda TAB_ROLE, para
+    // que ?defaultTab=publicar siga abriendo Publicar aunque role sea el
+    // "reciclador" por defecto. MODO lo sigue cambiando en caliente.
+    role: TAB_ROLE[(this.props || {}).defaultTab || "mapa"] ? null : ((this.props || {}).role || null),
     filters: { "Cerca de mí": true },
     claimed: { a1: true, a2: true }, // anuncios reclamados (ids de ADS)
     thread: "t1", draft: "", extra: {},

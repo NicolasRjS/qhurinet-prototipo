@@ -52,42 +52,29 @@ escribiendo.
 
 Las siete pantallas viven en un solo archivo y se cambian con `setState`, que no
 es una navegación. Para que aun así se puedan citar una por una, `support.js`
-sincroniza la pestaña visible con el **hash** de la URL:
+refleja la pestaña y el rol visibles en el **query string**, con los mismos
+nombres que las props:
 
 ```
-index.html#publicar
+index.html?role=generador&defaultTab=publicar
+index.html?role=generador&defaultTab=chats
 ```
 
 La dirección se actualiza sola al cambiar de pestaña, **atrás** y **adelante**
-del navegador funcionan, y recargar mantiene la pantalla. El hash no viaja al
-servidor, así que esto funciona igual con doble clic (`file://`) que publicado
-en GitHub Pages, sin necesidad de un archivo HTML por pantalla.
+del navegador funcionan, y recargar mantiene la pantalla. En las pestañas
+exclusivas de un rol (`mapa`, `recojos`, `publicar`, `publicaciones`) el rol va
+implícito y la barra lo omite: `?defaultTab=publicar` abre Publicar en modo
+generador sin más. En las compartidas (`chats`, `perfil`, `soporte`) sí hace
+falta `role`; sin él se abre como reciclador.
 
-Chats, Perfil y Soporte existen en los dos roles. Cuando el rol se fijó a mano
-con el botón **MODO**, va delante:
+Con doble clic (`file://`) los deep links funcionan igual al abrir, pero la
+barra no se actualiza al navegar: el navegador no deja tocar el historial en
+ese origen. Un `#hash` en la URL no significa nada y se descarta.
 
-```
-index.html#generador/chats
-```
-
-`?defaultTab=publicar` sigue funcionando al entrar; en cuanto carga, se
-convierte en `#publicar`.
-
-> **En el canvas de Claude Design** la maqueta sigue funcionando como siempre;
-> el canvas trae su propio runtime y `support.js` se hace a un lado si detecta
-> que ya hay uno (`if (window.DCLogic) return;`). Si aun así vieras algo raro
-> **dentro del canvas**, renombra `support.js` y todo vuelve a como estaba.
->
-> Si alguna vez `support.js` no cargara al abrir con doble clic (`file://`),
-> sirve la carpeta por HTTP y entra por ahí:
->
-> ```
-> python -m http.server 8000
-> ```
->
-> `support.js` es un script clásico sin `type="module"` ni `fetch`, que es
-> justo lo que los navegadores sí restringen en `file://`, así que el doble
-> clic debería bastar.
+> Pantallas citables: `mapa`, `recojos`, `publicar`, `publicaciones`, `chats`,
+> `perfil`, `soporte`. Los dos modales —el escáner QR y la valoración tras
+> confirmar la entrega— viven en el estado (`scannerOpen`, `rateOpen`) y no
+> tienen URL: se llega haciendo clic.
 
 ## Las dos caras del producto
 
@@ -119,11 +106,16 @@ el generador publicó y quién lo está recogiendo.
 Dos modales cruzan todas las pantallas: el **escáner QR** que confirma la
 entrega y la **valoración** posterior.
 
-### Propiedad configurable
+### Propiedades configurables
 
 `defaultTab` (enum) elige la pestaña inicial. Si apunta a una pantalla exclusiva
 de un rol —`publicar` y `publicaciones` son del generador, `mapa` y `recojos`
 del reciclador— el rol inicial se deduce de ahí.
+
+`role` (enum: `reciclador` | `generador`, por defecto `reciclador`) fija el rol
+inicial en las pestañas que existen en los dos lados: `chats`, `perfil` y
+`soporte`. En las exclusivas manda la pestaña. El botón **MODO** sigue cambiando
+el rol en caliente.
 
 ## Cómo simula la interacción
 
